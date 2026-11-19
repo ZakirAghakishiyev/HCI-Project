@@ -1,0 +1,810 @@
+import type {
+  BringItem,
+  GuideStep,
+  Host,
+  Person,
+  Session,
+  SessionSnapshot,
+  SportId,
+  Venue,
+} from '../types'
+import { SPORT_META } from './options'
+import { atNext } from '../lib/dates'
+
+export const venues: Venue[] = [
+  {
+    id: 'city',
+    name: 'City Sports Centre',
+    area: 'Court 3 & 4',
+    entranceName: 'City Sports Centre · Entrance B',
+    entrance: 'Enter via the side glass doors next to the car park. Turn left past reception directly to Main Hall B.',
+  },
+  {
+    id: 'uni-hall',
+    name: 'University Sports Hall',
+    area: 'Hall 2',
+    entranceName: 'University Sports Hall · Main doors',
+    entrance: 'Use the campus sports entrance on Court Road. Reception will point you to Hall 2. You do not need a club membership.',
+  },
+  {
+    id: 'community',
+    name: 'Community Sports Centre',
+    area: 'Studio 1',
+    entranceName: 'Community Sports Centre · Side entrance',
+    entrance: 'The side entrance on Park Lane is step-free. Follow the Back in Play signs to Studio 1.',
+  },
+  {
+    id: 'astro',
+    name: 'Campus Astro',
+    area: 'Pitch 2',
+    entranceName: 'Campus Astro · Pitch 2',
+    entrance: 'Walk past the gym and through the green gate. Pitch 2 is the nearer pitch. Lights are on after 5.',
+  },
+  {
+    id: 'courts',
+    name: 'University Courts',
+    area: 'Court 4',
+    entranceName: 'University Courts',
+    entrance: 'Courts sit behind the sports hall. If the gate is shut, press the intercom and say you are with Back in Play.',
+  },
+  {
+    id: 'pool',
+    name: 'University Pool',
+    area: 'Lane 3–4',
+    entranceName: 'University Pool · Leisure entrance',
+    entrance: 'Use the leisure entrance, not the club turnstiles. Lockers take a £1 coin, which you get back.',
+  },
+  {
+    id: 'loop',
+    name: 'Campus Loop',
+    area: 'Sports centre steps',
+    entranceName: 'Sports centre steps',
+    entrance: 'The group meets on the steps. Look for a lime bib. The route stays on lit campus paths.',
+  },
+]
+
+export const hosts: Host[] = [
+  {
+    id: 'sarah',
+    name: 'Sarah',
+    role: 'Session Host · Recreational Coach',
+    bio: "I'll help you settle in and introduce you to everyone. If you need a lighter game or a partner adjustment, just wave at me.",
+    avatar: '/images/sarah.jpg',
+  },
+  {
+    id: 'dan',
+    name: 'Dan',
+    role: 'Session Host · Kickabout lead',
+    bio: 'I keep the sides mixed and the touch easy. Sub whenever you want. Nobody is counting goals.',
+    avatar: '/images/dan.jpg',
+  },
+  {
+    id: 'amira',
+    name: 'Amira',
+    role: 'Session Host',
+    bio: 'I will meet you at the door, sort kit if you need it, and make sure you are paired with someone patient.',
+    avatar: '/images/amira.jpg',
+  },
+  {
+    id: 'josh',
+    name: 'Josh',
+    role: 'Session Host · Social run',
+    bio: 'We talk more than we time anything. Walk breaks are part of the plan, and I stay at the back with anyone who wants company.',
+    avatar: '/images/josh.jpg',
+  },
+  {
+    id: 'lena',
+    name: 'Lena',
+    role: 'Session Host',
+    bio: 'First time back is supposed to feel a bit awkward. I will keep the games short and the welcome obvious.',
+    avatar: '/images/lena.jpg',
+  },
+]
+
+export const people: Person[] = [
+  {
+    id: 'sam',
+    name: 'Sam',
+    age: 23,
+    avatar: '/images/sam.jpg',
+    sports: ['badminton'],
+    sportLabel: 'Badminton',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    distanceKm: 1.5,
+    compatibility: 96,
+    intro:
+      "Hey! I'm Sam. Played regular mixed doubles during secondary school and first year uni, then got swamped with coursework. Really want to ease back in on Thursday evenings. I have my own racket and love a relaxed, non-judgmental game.",
+    quote:
+      'Used to play regularly before uni exam prep. Looking for a casual doubles partner who wants to hit some rallies without intense competition.',
+    availability: 'Available Thursday evenings',
+    times: ['weekday-evenings'],
+    previousPlay: 'Casual / Club rallies',
+    vibe: 'Social, no stress',
+    progress: '2 sessions completed',
+    verified: true,
+    returning: true,
+    breakNote: 'Returning after a break',
+    statusLine: 'Returning player · Break of 10 months',
+    tags: ['Yonex rackets', 'Evening sessions', 'Post-game smoothies'],
+    discoverable: true,
+    featureRank: 1,
+  },
+  {
+    id: 'jordan',
+    name: 'Jordan',
+    age: 24,
+    avatar: '/images/jordan.jpg',
+    sports: ['badminton', 'tennis'],
+    sportLabel: 'Badminton & Tennis',
+    level: 'recreational',
+    levelLabel: 'Casual',
+    distanceKm: 2.1,
+    compatibility: 84,
+    intro:
+      'Recovering from an ankle sprain and looking for relaxed badminton footwork, not jumps or tournaments. Happy to rally and chat.',
+    quote: 'Recovering from an ankle sprain, looking for relaxed badminton footwork practice.',
+    availability: 'Thursday evenings, if the ankle agrees',
+    times: ['weekday-evenings', 'weekends'],
+    previousPlay: 'Social hit-abouts',
+    vibe: 'Easy, no pressure',
+    progress: 'Back after injury',
+    verified: true,
+    returning: true,
+    statusLine: 'Easing back · Ankle feeling better',
+    tags: ['Easy footwork', 'No jumping drills', 'Evening sessions'],
+    discoverable: true,
+    featureRank: 2,
+  },
+  {
+    id: 'nia',
+    name: 'Nia',
+    age: 22,
+    avatar: '/images/nia.jpg',
+    sports: ['badminton'],
+    sportLabel: 'Badminton',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    distanceKm: 0.9,
+    compatibility: 93,
+    intro: 'I stopped in second year when labs took over. I want a Thursday rally where it is fine to miss the shuttle.',
+    quote: 'Labs ate my evenings. I would like a gentle doubles game where missing is allowed.',
+    availability: 'Available Thursday evenings',
+    times: ['weekday-evenings'],
+    previousPlay: 'School club, then a long pause',
+    vibe: 'Friendly and chatty',
+    progress: '1 session completed',
+    verified: true,
+    returning: true,
+    breakNote: 'Returning after a break',
+    statusLine: 'Returning player · Break of 8 months',
+    tags: ['Doubles', 'Evening sessions', 'Campus'],
+    discoverable: true,
+    featureRank: 3,
+  },
+  {
+    id: 'riley',
+    name: 'Riley',
+    age: 21,
+    avatar: '/images/riley.jpg',
+    sports: ['badminton'],
+    sportLabel: 'Badminton',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    distanceKm: 1.7,
+    compatibility: 90,
+    intro: 'I have my own racket and I am rusty on purpose. Looking for someone who wants rallies, not a ranking.',
+    quote: 'Rusty on purpose. Happy to keep the shuttle in the air and talk between points.',
+    availability: 'Available Thursday evenings',
+    times: ['weekday-evenings'],
+    previousPlay: 'Casual hall hire',
+    vibe: 'Social, no stress',
+    progress: 'Just starting again',
+    verified: false,
+    returning: true,
+    statusLine: 'First weeks back',
+    tags: ['Own racket', 'Evening sessions'],
+    discoverable: true,
+    featureRank: 4,
+  },
+  {
+    id: 'maya',
+    name: 'Maya',
+    age: 22,
+    avatar: '/images/maya.jpg',
+    sports: ['running'],
+    sportLabel: 'Running',
+    level: 'starting',
+    levelLabel: 'Starting again',
+    distanceKm: 0.8,
+    compatibility: 91,
+    intro: 'I walk-jog and I am looking for company that does not mind stopping to chat.',
+    quote: 'I would rather finish smiling than finish fast.',
+    availability: 'Sunday mornings',
+    times: ['weekends'],
+    previousPlay: 'Park runs, a while ago',
+    vibe: 'Easy company',
+    progress: 'Building a Sunday habit',
+    verified: true,
+    returning: true,
+    breakNote: 'Returning after a break',
+    statusLine: 'Walk-jog is the whole plan',
+    tags: ['Walk breaks welcome', 'Sunday mornings'],
+    discoverable: true,
+    featureRank: 5,
+  },
+  {
+    id: 'priya',
+    name: 'Priya',
+    age: 21,
+    avatar: '/images/priya.jpg',
+    sports: ['swimming'],
+    sportLabel: 'Swimming',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    distanceKm: 1.3,
+    compatibility: 88,
+    intro: 'Lane swimming felt intimidating after a year off. I want a quiet lane and no timesheet.',
+    quote: 'Looking for someone who is happy to pause at the wall.',
+    availability: 'Weekday mornings',
+    times: ['weekday-mornings'],
+    previousPlay: 'Leisure swims',
+    vibe: 'Quiet and kind',
+    progress: '2 swims this month',
+    verified: true,
+    returning: true,
+    statusLine: 'Back in the water',
+    tags: ['Untimed', 'Morning lanes'],
+    discoverable: true,
+    featureRank: 6,
+  },
+  {
+    id: 'leo',
+    name: 'Leo',
+    age: 25,
+    avatar: '/images/leo.jpg',
+    sports: ['football'],
+    sportLabel: 'Football',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    distanceKm: 1.9,
+    compatibility: 86,
+    intro: 'I miss 5-a-side but not the shouting. Bibs, short games, and a laugh afterwards.',
+    quote: 'After work I want a kickabout, not a trial.',
+    availability: 'Weekends',
+    times: ['weekends'],
+    previousPlay: '5-a-side, then a job got in the way',
+    vibe: 'Social, no stress',
+    progress: 'One game back',
+    verified: true,
+    returning: true,
+    statusLine: 'Returning player · Missed having a side',
+    tags: ['5-a-side', 'Bibs provided'],
+    discoverable: true,
+    featureRank: 7,
+  },
+  {
+    id: 'elena',
+    name: 'Elena',
+    age: 23,
+    avatar: '/images/elena.jpg',
+    sports: ['tennis'],
+    sportLabel: 'Tennis',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    distanceKm: 1.1,
+    compatibility: 90,
+    intro: 'My serve is a work in progress and I would like it to stay that way for a bit. Rallies over winners.',
+    quote: 'Happy to feed balls and laugh when they hit the net.',
+    availability: 'Saturday mornings',
+    times: ['weekends'],
+    previousPlay: 'Club lessons as a teenager',
+    vibe: 'Patient',
+    progress: 'Finding a rally partner',
+    verified: true,
+    returning: true,
+    breakNote: 'Returning after a break',
+    statusLine: 'Returning player · Serve still rusty',
+    tags: ['Rallies', 'Saturday mornings'],
+    discoverable: true,
+    featureRank: 8,
+  },
+  {
+    id: 'chris',
+    name: 'Chris',
+    age: 24,
+    avatar: '/images/chris.jpg',
+    sports: ['basketball'],
+    sportLabel: 'Basketball',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    distanceKm: 1.4,
+    compatibility: 83,
+    intro: 'Half-court, lots of passing, no full-court sprints. I am coming back after a desk-job year.',
+    quote: 'I want a shootaround that turns into a friendly game, not a try-out.',
+    availability: 'Wednesday evenings',
+    times: ['weekday-evenings'],
+    previousPlay: 'University intramurals',
+    vibe: 'Playful',
+    progress: 'Two shootarounds in',
+    verified: false,
+    returning: true,
+    statusLine: 'Back after a desk-job year',
+    tags: ['Half court', 'Passing first'],
+    discoverable: true,
+    featureRank: 9,
+  },
+]
+
+const GUARANTEE: Record<SportId, string> = {
+  badminton: 'You do not need to be at your previous level — just come to hit some shuttles and move.',
+  football: 'You do not need to be match-fit — just come for an easy kickabout.',
+  tennis: 'You do not need a perfect serve — just come for a few gentle rallies.',
+  basketball: 'You do not need to sink shots — just come to pass, move, and play around.',
+  running: 'You do not need a pace — walking is part of the session.',
+  swimming: 'You do not need a fast lane — pause at the wall whenever you like.',
+}
+
+function defaultBring(sport: SportId, included: boolean): BringItem[] {
+  if (sport === 'swimming') {
+    return [
+      { item: 'Swimwear' },
+      { item: 'Towel' },
+      { item: 'Goggles, if you have them' },
+      { item: included ? 'Kickboard available' : 'Bring your own goggles', provided: included },
+    ]
+  }
+  if (sport === 'running') {
+    return [{ item: 'Trainers' }, { item: 'A comfortable top' }, { item: 'Water bottle' }, { item: 'No bib needed', provided: true }]
+  }
+  if (sport === 'football') {
+    return [
+      { item: 'Trainers or astro boots' },
+      { item: 'A comfortable top' },
+      { item: 'Water bottle' },
+      { item: 'Bibs provided', provided: true },
+    ]
+  }
+  return [
+    { item: 'Sportswear / shorts' },
+    { item: 'Indoor court trainers' },
+    { item: 'Water bottle' },
+    { item: included ? 'Racket provided' : 'Bring a racket if you have one', provided: included },
+  ]
+}
+
+function defaultSteps(sport: SportId, host: string, entrance: string): GuideStep[] {
+  const play =
+    sport === 'running'
+      ? { title: 'Jog, walk, or mix both', body: 'The group stays together. Walking is part of the session, not a failure.' }
+      : sport === 'swimming'
+        ? { title: 'Pick an easy lane', body: 'Lanes are shared and untimed. Pause at the wall whenever you need.' }
+        : sport === 'football'
+          ? { title: 'Play short games', body: 'Rolling subs, mixed sides, and no one keeping a serious score.' }
+          : { title: 'Play casual games', body: 'Short games, easy breaks, and no obligation to stay in every rally.' }
+  return [
+    { title: 'Arrive 10 minutes early', body: entrance },
+    { title: `Meet your host (${host})`, body: `${host} will say hello, show you where bags go, and introduce you only if you want that.` },
+    { title: 'Warm up with the group', body: 'A few easy minutes. Copy someone, go lighter, or just move until you feel ready.' },
+    play,
+  ]
+}
+
+interface Draft {
+  id: string
+  sport: SportId
+  name: string
+  venueId: string
+  dow: number
+  hour: number
+  minute?: number
+  duration?: number
+  distanceKm: number
+  courtFee: number
+  equipmentFee?: number
+  equipmentIncluded: boolean
+  equipmentNote: string
+  level: Session['level']
+  levelLabel: string
+  hostId: string
+  players: number
+  tags: string[]
+  cardNote: string
+  rank: number
+  eyebrow?: string
+  attendeeIds?: string[]
+  welcomeNote?: string
+  whoFor?: string[]
+  atmosphere?: string[]
+  mood?: string[]
+  bring?: BringItem[]
+  steps?: GuideStep[]
+  courtLabel?: string
+  equipmentLabel?: string
+  guarantee?: string
+}
+
+function build(draft: Draft): Session {
+  const start = atNext(draft.dow, draft.hour, draft.minute ?? 0)
+  const minutes = draft.duration ?? 60
+  const end = new Date(start.getTime() + minutes * 60000)
+  const venue = venues.find((item) => item.id === draft.venueId)!
+  const host = hosts.find((item) => item.id === draft.hostId)!
+  const equipmentFee = draft.equipmentFee ?? 0
+  return {
+    id: draft.id,
+    sport: draft.sport,
+    name: draft.name,
+    venueId: draft.venueId,
+    startsAt: start.toISOString(),
+    endsAt: end.toISOString(),
+    minutes,
+    distanceKm: draft.distanceKm,
+    walkMins: Math.max(4, Math.round(draft.distanceKm * 10)),
+    courtFee: draft.courtFee,
+    equipmentFee,
+    price: Math.round((draft.courtFee + equipmentFee) * 100) / 100,
+    equipmentIncluded: draft.equipmentIncluded,
+    equipmentNote: draft.equipmentNote,
+    courtLabel: draft.courtLabel ?? 'Session entry',
+    equipmentLabel: draft.equipmentLabel ?? 'Equipment',
+    level: draft.level,
+    levelLabel: draft.levelLabel,
+    hostId: draft.hostId,
+    atmosphere: draft.atmosphere ?? ['Friendly group', 'Mixed experience', 'Casual and relaxed'],
+    mood: draft.mood ?? ['Friendly & chatty', 'Beginner-friendly', 'Non-competitive', 'Social & relaxed'],
+    bring: draft.bring ?? defaultBring(draft.sport, draft.equipmentIncluded),
+    whoFor: draft.whoFor ?? [
+      'Beginners and returning players after a break',
+      'A recreational atmosphere with mixed experience',
+      'No previous club experience required',
+    ],
+    welcomeNote:
+      draft.welcomeNote ??
+      'Not played for a while? You are welcome here. Most people are also finding their feet. There is no scoring pressure.',
+    steps: draft.steps ?? defaultSteps(draft.sport, host.name, venue.entrance),
+    guarantee: draft.guarantee ?? GUARANTEE[draft.sport],
+    attendeeIds: draft.attendeeIds ?? [],
+    players: draft.players,
+    tags: draft.tags,
+    eyebrow: draft.eyebrow,
+    cardNote: draft.cardNote,
+    image: SPORT_META[draft.sport].image,
+    rank: draft.rank,
+  }
+}
+
+export const sessions: Session[] = [
+  build({
+    id: 'badminton-beginner',
+    sport: 'badminton',
+    name: 'Beginner-friendly Badminton',
+    venueId: 'city',
+    dow: 4,
+    hour: 18,
+    distanceKm: 1.2,
+    courtFee: 3.5,
+    equipmentFee: 1,
+    equipmentIncluded: true,
+    equipmentNote: 'Yonex racket hire and shuttlecocks are included.',
+    courtLabel: 'Session court entry fee',
+    equipmentLabel: 'Yonex racket hire & shuttlecocks',
+    level: 'starting',
+    levelLabel: 'Beginner-friendly',
+    hostId: 'sarah',
+    players: 7,
+    tags: ['Beginner-friendly', 'Mixed'],
+    cardNote: 'Host Sarah welcomes you',
+    rank: 1,
+    attendeeIds: ['sam', 'jordan', 'nia', 'riley'],
+    welcomeNote:
+      "Not played for a while? You're welcome here. Most attendees haven't picked up a racket in 1–5 years. No scoring pressure, gentle warm-ups, and rotation games.",
+    whoFor: [
+      'Beginners and returning players after a hiatus',
+      'Recreational atmosphere with mixed experience',
+      'No previous club experience required',
+    ],
+    atmosphere: ['Friendly group', 'Mixed-experience', 'Casual games & rallies'],
+    mood: ['Friendly & chatty', 'Beginner-friendly', 'Non-competitive', 'Social & relaxed'],
+    bring: [
+      { item: 'Sportswear / shorts' },
+      { item: 'Indoor court trainers' },
+      { item: 'Water bottle' },
+      { item: 'Racket provided', provided: true },
+    ],
+    steps: [
+      {
+        title: 'Arrive 10 minutes early',
+        body: 'Head to Hall B. No changing-room stress — bags go straight on the court benches.',
+      },
+      {
+        title: 'Meet your session host (Sarah)',
+        body: 'Sarah hands you a pre-strung Yonex racket and shows you the first easy rally. Hire is already inside the £4.50.',
+      },
+      {
+        title: 'Warm up with the group',
+        body: 'A gentle 5-minute rally to shake off stiffness and nerves.',
+      },
+      {
+        title: 'Play casual games',
+        body: 'Rotate doubles partners every 12 minutes. Fun, social, and zero scoring pressure.',
+      },
+    ],
+  }),
+  build({
+    id: 'badminton-rec',
+    sport: 'badminton',
+    name: 'Recreational Badminton',
+    venueId: 'uni-hall',
+    dow: 6,
+    hour: 11,
+    distanceKm: 0.8,
+    courtFee: 4,
+    equipmentIncluded: false,
+    equipmentNote: 'Rackets are available to hire at the desk for £1.',
+    level: 'recreational',
+    levelLabel: 'Recreational level',
+    hostId: 'sarah',
+    players: 6,
+    tags: ['Recreational level'],
+    eyebrow: 'Equipment available',
+    cardNote: '6 players confirmed',
+    rank: 2,
+    attendeeIds: ['sam', 'riley', 'nia'],
+  }),
+  build({
+    id: 'badminton-social',
+    sport: 'badminton',
+    name: 'Social Badminton',
+    venueId: 'community',
+    dow: 0,
+    hour: 14,
+    distanceKm: 1.8,
+    courtFee: 3.5,
+    equipmentIncluded: true,
+    equipmentNote: 'Shuttlecocks are free. Bring a racket if you own one — spares are on the side.',
+    equipmentLabel: 'Shuttlecocks',
+    level: 'starting',
+    levelLabel: 'Casual',
+    hostId: 'lena',
+    players: 8,
+    tags: ['Casual', 'Social play'],
+    eyebrow: 'Free shuttlecocks',
+    cardNote: 'Casual chat & warm-up',
+    rank: 3,
+    attendeeIds: ['jordan', 'nia'],
+  }),
+  build({
+    id: 'football-friday',
+    sport: 'football',
+    name: 'Casual 5-a-side',
+    venueId: 'astro',
+    dow: 5,
+    hour: 19,
+    distanceKm: 0.6,
+    courtFee: 4,
+    equipmentIncluded: true,
+    equipmentNote: 'Bibs and a ball are included.',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    hostId: 'dan',
+    players: 10,
+    tags: ['5-a-side', 'Mixed'],
+    cardNote: 'Host Dan keeps the sides mixed',
+    rank: 4,
+    attendeeIds: ['leo'],
+  }),
+  build({
+    id: 'football-sunday',
+    sport: 'football',
+    name: 'Sunday kickabout',
+    venueId: 'astro',
+    dow: 0,
+    hour: 15,
+    distanceKm: 3.4,
+    courtFee: 6,
+    equipmentIncluded: false,
+    equipmentNote: 'Bring dark and light tops. Balls are shared.',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    hostId: 'dan',
+    players: 12,
+    tags: ['Kickabout'],
+    cardNote: 'A little further from campus',
+    rank: 8,
+    attendeeIds: ['leo'],
+  }),
+  build({
+    id: 'tennis-sat',
+    sport: 'tennis',
+    name: 'Easy rally tennis',
+    venueId: 'courts',
+    dow: 6,
+    hour: 9,
+    distanceKm: 1,
+    courtFee: 5,
+    equipmentIncluded: false,
+    equipmentNote: 'Bring a racket if you can. Two loan rackets are held at reception.',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    hostId: 'amira',
+    players: 4,
+    tags: ['Rallies', 'Patient pace'],
+    cardNote: 'Host Amira pairs you up',
+    rank: 5,
+    attendeeIds: ['elena'],
+  }),
+  build({
+    id: 'basketball-wed',
+    sport: 'basketball',
+    name: 'Social half-court',
+    venueId: 'uni-hall',
+    dow: 3,
+    hour: 18,
+    distanceKm: 1.2,
+    courtFee: 3,
+    equipmentIncluded: true,
+    equipmentNote: 'Balls are provided. Indoor trainers help.',
+    level: 'starting',
+    levelLabel: 'Beginner-friendly',
+    hostId: 'lena',
+    players: 8,
+    tags: ['Half court', 'Social'],
+    cardNote: 'Short games and rolling subs',
+    rank: 6,
+    attendeeIds: ['chris'],
+  }),
+  build({
+    id: 'run-sun',
+    sport: 'running',
+    name: 'Easy campus jog',
+    venueId: 'loop',
+    dow: 0,
+    hour: 9,
+    duration: 45,
+    distanceKm: 0.4,
+    courtFee: 0,
+    equipmentIncluded: true,
+    equipmentNote: 'Nothing to hire. Trainers and a top are enough.',
+    level: 'starting',
+    levelLabel: 'Starting again',
+    hostId: 'josh',
+    players: 9,
+    tags: ['Walk breaks', 'Free'],
+    eyebrow: 'Free',
+    cardNote: 'Walk-jog welcome',
+    rank: 7,
+    attendeeIds: ['maya'],
+  }),
+  build({
+    id: 'run-tue',
+    sport: 'running',
+    name: 'Before-lectures loop',
+    venueId: 'loop',
+    dow: 2,
+    hour: 7,
+    minute: 30,
+    duration: 30,
+    distanceKm: 2.8,
+    courtFee: 0,
+    equipmentIncluded: true,
+    equipmentNote: 'No kit hire. It stays light.',
+    level: 'starting',
+    levelLabel: 'Starting again',
+    hostId: 'josh',
+    players: 5,
+    tags: ['Early', 'Free'],
+    cardNote: 'A short loop, then coffee if you want',
+    rank: 9,
+    attendeeIds: ['maya'],
+  }),
+  build({
+    id: 'swim-tue',
+    sport: 'swimming',
+    name: 'Quiet lane swim',
+    venueId: 'pool',
+    dow: 2,
+    hour: 7,
+    duration: 45,
+    distanceKm: 0.9,
+    courtFee: 3.5,
+    equipmentIncluded: true,
+    equipmentNote: 'A kickboard is included if you want one.',
+    level: 'recreational',
+    levelLabel: 'Recreational',
+    hostId: 'amira',
+    players: 6,
+    tags: ['Morning', 'Lanes'],
+    cardNote: 'Host Amira saves you a lane',
+    rank: 10,
+    attendeeIds: ['priya'],
+  }),
+  build({
+    id: 'swim-sat',
+    sport: 'swimming',
+    name: 'Open easy swim',
+    venueId: 'pool',
+    dow: 6,
+    hour: 8,
+    duration: 45,
+    distanceKm: 1.5,
+    courtFee: 2.5,
+    equipmentIncluded: true,
+    equipmentNote: 'Floats are by the poolside.',
+    level: 'starting',
+    levelLabel: 'Starting again',
+    hostId: 'amira',
+    players: 8,
+    tags: ['Open swim', 'Gentle'],
+    eyebrow: 'Floats included',
+    cardNote: 'No lengths to count',
+    rank: 11,
+    attendeeIds: ['priya'],
+  }),
+]
+
+export function getSession(id: string): Session | undefined {
+  return sessions.find((session) => session.id === id)
+}
+
+export function getVenue(id: string): Venue {
+  return venues.find((venue) => venue.id === id) ?? venues[0]
+}
+
+export function getHost(id: string): Host {
+  return hosts.find((host) => host.id === id) ?? hosts[0]
+}
+
+export function getPerson(id: string): Person | undefined {
+  return people.find((person) => person.id === id)
+}
+
+export function snapshotFrom(session: Session, overrides: Partial<SessionSnapshot> = {}): SessionSnapshot {
+  const host = getHost(session.hostId)
+  const venue = getVenue(session.venueId)
+  return {
+    sessionId: session.id,
+    name: session.name,
+    sport: session.sport,
+    venue: venue.name,
+    place: `${venue.name} · ${venue.area}`,
+    startsAt: session.startsAt,
+    endsAt: session.endsAt,
+    minutes: session.minutes,
+    price: session.price,
+    courtFee: session.courtFee,
+    equipmentFee: session.equipmentFee,
+    equipmentIncluded: session.equipmentIncluded,
+    equipmentNote: session.equipmentNote,
+    hostId: host.id,
+    hostName: host.name,
+    distanceKm: session.distanceKm,
+    image: session.image,
+    levelLabel: session.levelLabel,
+    ...overrides,
+  }
+}
+
+export function shortSnapshot(from: SessionSnapshot): SessionSnapshot {
+  const start = new Date()
+  start.setMinutes(start.getMinutes() + 20)
+  const end = new Date(start.getTime() + 15 * 60000)
+  return {
+    ...from,
+    sessionId: 'short-reset',
+    name: '15-minute footwork reset',
+    venue: 'Wherever you are',
+    place: 'Home, or any quiet corner',
+    startsAt: start.toISOString(),
+    endsAt: end.toISOString(),
+    minutes: 15,
+    price: 0,
+    courtFee: 0,
+    equipmentFee: 0,
+    equipmentIncluded: true,
+    equipmentNote: 'No kit needed. A little space and trainers are enough.',
+    distanceKm: 0,
+    levelLabel: 'Keep the habit',
+    shortSession: true,
+  }
+}
