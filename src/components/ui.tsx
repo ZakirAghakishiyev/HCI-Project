@@ -1,11 +1,12 @@
 import { useEffect, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowLeft, CalendarDays, Compass, Home, TrendingUp, UserRound, X } from 'lucide-react'
-import type { Session, SportId } from '../types'
+import type { Session, SportId, WeatherAssessment } from '../types'
 import { SPORT_META } from '../data/options'
-import { getHost, getVenue } from '../data/catalog'
+import { getHost, getVenue, sessionSettingLabel } from '../data/catalog'
 import { money, sportLabel, whenShort } from '../lib/format'
 import { useApp } from '../store/store'
+import { WeatherBadge } from './weather'
 
 export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
@@ -138,7 +139,17 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   )
 }
 
-export function SessionCard({ session, layout = 'explore', booked }: { session: Session; layout?: 'explore' | 'home'; booked?: boolean }) {
+export function SessionCard({
+  session,
+  layout = 'explore',
+  booked,
+  weather,
+}: {
+  session: Session
+  layout?: 'explore' | 'home'
+  booked?: boolean
+  weather?: WeatherAssessment | null
+}) {
   const venue = getVenue(session.venueId)
   const host = getHost(session.hostId)
   return (
@@ -152,11 +163,18 @@ export function SessionCard({ session, layout = 'explore', booked }: { session: 
       </div>
       {session.eyebrow ? <div className="eyebrow">{session.eyebrow}</div> : null}
       <div className="between">
-        <span className="cluster">{session.tags.slice(0, 2).map((tag) => <span key={tag} className="tag">{tag}</span>)}</span>
+        <span className="cluster">
+          <span className="tag">{sessionSettingLabel(session.setting)}</span>
+          {session.tags
+            .filter((tag) => !/^(indoor|outdoor|weather-dependent)$/i.test(tag))
+            .slice(0, 2)
+            .map((tag) => <span key={tag} className="tag">{tag}</span>)}
+        </span>
         <span className="tiny">{session.distanceKm} km away</span>
       </div>
       <h3>{session.name}</h3>
       <p className="tiny">{whenShort(session.startsAt)} · {venue.name}</p>
+      {weather ? <WeatherBadge assessment={weather} /> : null}
       <div className="between">
         <span className="tiny">{layout === 'home' ? `${session.equipmentIncluded ? 'Gear included' : 'Kit noted'} · ${host.name} hosting` : session.cardNote}</span>
         <ButtonLink to={`/sessions/${session.id}`} variant="navy" size="sm">{booked ? 'View booking' : layout === 'home' ? 'Book Pass' : 'View Details'}</ButtonLink>

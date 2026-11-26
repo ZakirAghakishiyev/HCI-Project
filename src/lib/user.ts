@@ -82,7 +82,28 @@ export function deriveUser(user: User): User {
       detail: prev?.unlocked ? prev.detail : describe(def.id, user),
     }
   })
-  return { ...user, stats, achievements }
+  const bookings = user.bookings.map((booking) => {
+    const live = sessions.find((session) => session.id === booking.sessionId)
+    if (!live) {
+      return {
+        ...booking,
+        snapshot: {
+          ...booking.snapshot,
+          setting: booking.snapshot.setting ?? 'indoor',
+          level: booking.snapshot.level ?? 'recreational',
+        },
+      }
+    }
+    return {
+      ...booking,
+      snapshot: {
+        ...booking.snapshot,
+        setting: booking.snapshot.setting ?? live.setting,
+        level: booking.snapshot.level ?? live.level,
+      },
+    }
+  })
+  return { ...user, bookings, stats, achievements }
 }
 
 export function journeyStage(user: User): 1 | 2 | 3 {
@@ -187,11 +208,12 @@ export function createBlankUser(input: { name: string; email: string; password: 
 }
 
 export function createAlex(): User {
-  const beginner = sessions.find((session) => session.id === 'badminton-beginner') ?? sessions[0]
+  const outdoor = sessions.find((session) => session.id === 'badminton-outdoor') ?? sessions[0]
+  const indoor = sessions.find((session) => session.id === 'badminton-beginner') ?? sessions[0]
   const tuesday = onWeekday(0, 2, 18)
   const lastMonday = onWeekday(1, 1, 18)
   const lastWednesday = onWeekday(1, 3, 11)
-  const upcomingSnap = snapshotFrom(beginner)
+  const upcomingSnap = snapshotFrom(outdoor)
   const user: User = {
     id: 'user-alex',
     name: 'Alex Turner',
@@ -218,21 +240,21 @@ export function createAlex(): User {
     bookings: [
       {
         id: 'bk-next',
-        sessionId: beginner.id,
+        sessionId: outdoor.id,
         snapshot: upcomingSnap,
         status: 'upcoming',
         buddyId: 'sam',
         createdAt: new Date().toISOString(),
       },
-      pastBooking('bk-tue', beginner.id, tuesday, 45),
-      pastBooking('bk-mon', beginner.id, lastMonday, 60, 'sam'),
-      pastBooking('bk-wed', beginner.id, lastWednesday, 30),
+      pastBooking('bk-tue', indoor.id, tuesday, 45),
+      pastBooking('bk-mon', indoor.id, lastMonday, 60, 'sam'),
+      pastBooking('bk-wed', indoor.id, lastWednesday, 30),
     ],
     invitations: [
       {
         id: 'inv-sam',
         buddyId: 'sam',
-        sessionId: beginner.id,
+        sessionId: outdoor.id,
         status: 'pending',
         message: '',
         createdAt: new Date().toISOString(),
@@ -260,10 +282,10 @@ export function createAlex(): User {
       {
         id: 'n1',
         title: 'Thursday is open',
-        body: 'Beginner-friendly badminton, rackets included, £4.50 at City Sports Centre.',
+        body: 'Outdoor badminton at 6 PM, rackets included, £4.50. Weather-smart tips will keep you dry.',
         createdAt: new Date().toISOString(),
         read: false,
-        href: '/sessions/badminton-beginner',
+        href: '/sessions/badminton-outdoor',
       },
       {
         id: 'n2',

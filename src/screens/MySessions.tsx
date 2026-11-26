@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getPerson } from '../data/catalog'
+import { getPerson, sessionSettingLabel } from '../data/catalog'
 import { money, relativeLabel, whenRange } from '../lib/format'
 import { completedOf, upcomingOf } from '../lib/user'
+import { assessWeather } from '../lib/weather/assessment'
+import { useWeather } from '../hooks/useWeather'
+import { BookingWeatherActions, WeatherBadge, WeatherDetailsCard } from '../components/weather'
 import { Button, ButtonLink, Sheet, Shell, useTitle } from '../components/ui'
 import { useApp } from '../store/store'
 
@@ -10,6 +13,7 @@ export function MySessions() {
   useTitle('My Sessions')
   const { user, cancelBooking, completeBooking } = useApp()
   const navigate = useNavigate()
+  const { forecast, error, loading } = useWeather(user?.area)
   const [tab, setTab] = useState<'upcoming' | 'completed'>('upcoming')
   const [cancelId, setCancelId] = useState<string | null>(null)
   if (!user) return null
@@ -47,11 +51,21 @@ export function MySessions() {
             const invites = user.invitations.filter((invite) => invite.sessionId === booking.sessionId && invite.status !== 'declined')
             const buddy = invites[0] ? getPerson(invites[0].buddyId) : undefined
             const feedback = user.feedback.find((item) => item.bookingId === booking.id)
+            const weather =
+              booking.status === 'upcoming' && !loading
+                ? assessWeather({
+                    startsAt: booking.snapshot.startsAt,
+                    setting: booking.snapshot.setting,
+                    sport: booking.snapshot.sport,
+                    forecast,
+                    forecastError: error,
+                  })
+                : null
             return (
               <article key={booking.id} className="card pad stack">
                 <div className="between">
                   <div>
-                    <div className="tiny">{booking.snapshot.levelLabel}</div>
+                    <div className="tiny">{booking.snapshot.levelLabel} · {sessionSettingLabel(booking.snapshot.setting)}</div>
                     <h2 className="h2" style={{ fontSize: 18 }}>{booking.snapshot.name}</h2>
                   </div>
                   <span className="price-pill">{booking.snapshot.shortSession ? 'Free reset' : `${money(booking.snapshot.price)} paid`}</span>
@@ -60,6 +74,15 @@ export function MySessions() {
                 <p className="tiny">{booking.snapshot.place}</p>
                 {buddy && <p className="tiny">Sport buddy: {buddy.name} · {invites[0].status === 'accepted' ? 'Accepted' : 'Pending accept'}</p>}
                 {booking.flexNote && <p className="tiny">{booking.flexNote}</p>}
+                {weather ? (
+                  <>
+                    <WeatherBadge assessment={weather} />
+                    {(weather.risk === 'yellow' || weather.risk === 'orange' || weather.risk === 'red' || weather.risk === 'unknown') && (
+                      <WeatherDetailsCard assessment={weather} startsAt={booking.snapshot.startsAt} />
+                    )}
+                    <BookingWeatherActions sessionId={booking.sessionId} assessment={weather} />
+                  </>
+                ) : null}
                 <div className="cluster">
                   {booking.sessionId !== 'short-reset' && <ButtonLink to={booking.status === 'upcoming' ? `/confirm/${booking.id}` : `/sessions/${booking.sessionId}`} size="sm" variant="outline">View Details</ButtonLink>}
                   {booking.status === 'upcoming' && <ButtonLink to={`/reschedule/${booking.id}`} size="sm" variant="navy">Reschedule</ButtonLink>}
@@ -79,7 +102,7 @@ export function MySessions() {
             </div>
           )}
         </div>
-        <div className="notice"><b>Plans changed? No guilt.</b><p>University exams or a late shift? Use Flex to move your slot, or try a 15-minute version so the habit stays kind.</p></div>
+        <div className="notice"><b>Plans changed? No guilt.</b><p>University exams or a late shift? Use Flex to move your slot, or try a 15-minute version so the habit stays kind. Weather never cancels for you — you stay in control.</p></div>
       </div>
     </Shell>
   )

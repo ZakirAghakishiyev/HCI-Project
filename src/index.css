@@ -297,3 +297,45 @@ h1, h2, h3, p { margin: 0; }
 .select { border: 1px solid var(--line); background: #fff; border-radius: 999px; min-height: 36px; padding: 0 10px; font-weight: 700; font-size: 13px; }
 .bell-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: var(--lime); border-radius: 99px; }
 .icon-wrap { position: relative; }
+
+/* Weather-Smart Sessions */
+:root {
+  --weather-green: #2f6b3a;
+  --weather-green-bg: #e7f5ea;
+  --weather-yellow: #8a6a12;
+  --weather-yellow-bg: #fff6d6;
+  --weather-orange: #9a4d12;
+  --weather-orange-bg: #ffe8d4;
+  --weather-red: #8f2430;
+  --weather-red-bg: #fde6e8;
+  --weather-unknown: #5a6570;
+  --weather-unknown-bg: #eef1f3;
+}
+.weather-badge {
+  display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+  border-radius: 999px; padding: 5px 10px; font-size: 11.5px; font-weight: 700;
+  border: 1px solid transparent;
+}
+.weather-badge.compact { padding: 4px 8px; font-size: 11px; }
+.weather-badge.risk-green { background: var(--weather-green-bg); color: var(--weather-green); border-color: #c9e6cf; }
+.weather-badge.risk-yellow { background: var(--weather-yellow-bg); color: var(--weather-yellow); border-color: #f0df9a; }
+.weather-badge.risk-orange { background: var(--weather-orange-bg); color: var(--weather-orange); border-color: #f0c39a; }
+.weather-badge.risk-red { background: var(--weather-red-bg); color: var(--weather-red); border-color: #efb8be; }
+.weather-badge.risk-unknown { background: var(--weather-unknown-bg); color: var(--weather-unknown); border-color: #d5dde3; }
+.weather-card {
+  background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.weather-card.risk-yellow { border-color: #f0df9a; background: #fffdf5; }
+.weather-card.risk-orange { border-color: #f0c39a; background: #fff8f2; }
+.weather-card.risk-red { border-color: #efb8be; background: #fff7f8; }
+.weather-card.risk-green { border-color: #c9e6cf; }
+.weather-card.risk-unknown { border-color: #d5dde3; }
+.weather-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--lime-3); display: grid; place-items: center; font-size: 18px; flex: none; }
+.weather-copy { font-size: 13.5px; line-height: 1.45; color: #314038; }
+.weather-home { gap: 10px; }
+.weather-alts { border-style: solid; }
+.alt-row {
+  display: flex; flex-direction: column; gap: 10px; padding: 12px;
+  background: var(--bg); border-radius: 16px; border: 1px solid var(--line);
+}

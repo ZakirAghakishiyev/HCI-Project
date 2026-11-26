@@ -4,11 +4,13 @@ import { getPerson, getSession, shortSnapshot, snapshotFrom } from '../data/cata
 import { filtersFromPrefs } from '../lib/filter'
 import { createAlex, createBlankUser, deriveUser, suggestedGoal } from '../lib/user'
 import { uid } from '../lib/format'
+import { getWeatherForecast } from '../lib/weather/service'
+import { collectWeatherNotifications } from '../lib/weather/notifications'
 
-const STORAGE_KEY = 'back-in-play-v1'
+const STORAGE_KEY = 'back-in-play-v2'
 
 interface Persisted {
-  version: 1
+  version: 2
   users: User[]
   currentUserId: string | null
 }
@@ -39,14 +41,14 @@ function load(): Persisted {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as Persisted
-      if (parsed.version === 1 && Array.isArray(parsed.users) && parsed.users.length) {
+      if (parsed.version === 2 && Array.isArray(parsed.users) && parsed.users.length) {
         return { ...parsed, users: parsed.users.map((user) => deriveUser(user)) }
       }
     }
   } catch {
     /* seed a fresh comeback */
   }
-  return { version: 1, users: [deriveUser(createAlex())], currentUserId: null }
+  return { version: 2, users: [deriveUser(createAlex())], currentUserId: null }
 }
 
 interface RegisterInput {
@@ -111,6 +113,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => () => {
     inviteTimers.current.forEach((timer) => window.clearTimeout(timer))
   }, [])
+
+  const weatherSyncKey = user
+    ? `${user.id}|${user.area}|${user.bookings.map((booking) => `${booking.id}:${booking.sessionId}:${booking.snapshot.startsAt}:${booking.snapshot.setting}`).join(',')}`
+    : ''
+
+  useEffect(() => {
+    if (!user || !weatherSyncKey) return
+    let cancelled = false
+    const userId = user.id
+    const area = user.area
+    const bookings = user.bookings
+    const syncWeatherNotes = async () => {
+      const snapshotUser = { ...user, bookings }
+      try {
+        const forecast = await getWeatherForecast(area)
+        if (cancelled) return
+        const notes = collectWeatherNotifications(snapshotUser, forecast, false)
+        if (!notes.length) return
+        dispatch({
+          type: 'patch-user',
+          userId,
+          patch: (current) => ({
+            ...current,
+            notifications: [...notes, ...current.notifications],
+          }),
+        })
+      } catch {
+        if (cancelled) return
+        const notes = collectWeatherNotifications(snapshotUser, null, true)
+        if (!notes.length) return
+        dispatch({
+          type: 'patch-user',
+          userId,
+          patch: (current) => ({
+            ...current,
+            notifications: [...notes, ...current.notifications],
+          }),
+        })
+      }
+    }
+    void syncWeatherNotes()
+    const timer = window.setInterval(() => void syncWeatherNotes(), 30 * 60 * 1000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [weatherSyncKey])
 
   const notify = (message: string) => {
     setToast(message)

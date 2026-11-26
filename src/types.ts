@@ -10,6 +10,10 @@ export type DayBucket = 'mon-wed' | 'thursday' | 'friday' | 'weekends'
 
 export type NotifyPref = 'buddies-flex' | 'sessions' | 'gentle' | 'paused'
 
+export type VenueSetting = 'indoor' | 'outdoor' | 'mixed'
+
+export type WeatherRisk = 'green' | 'yellow' | 'orange' | 'red' | 'unknown'
+
 export type InviteStatus = 'pending' | 'accepted' | 'declined'
 
 export interface Preferences {
@@ -43,6 +47,8 @@ export interface SessionSnapshot {
   distanceKm: number
   image: string
   levelLabel: string
+  level: SkillLevel
+  setting: VenueSetting
   shortSession?: boolean
 }
 
@@ -152,6 +158,7 @@ export interface Venue {
   area: string
   entranceName: string
   entrance: string
+  setting: VenueSetting
 }
 
 export interface Host {
@@ -194,6 +201,7 @@ export interface Session {
   sport: SportId
   name: string
   venueId: string
+  setting: VenueSetting
   startsAt: string
   endsAt: string
   minutes: number
@@ -223,4 +231,53 @@ export interface Session {
   cardNote: string
   image: string
   rank: number
+}
+
+export interface HourlyWeatherPoint {
+  time: string
+  temperatureC: number
+  precipitationMm: number
+  precipitationProbability: number
+  weatherCode: number
+  windSpeedKmh: number
+  description: string
+}
+
+export interface DailyWeatherPoint {
+  date: string
+  weatherCode: number
+  description: string
+  temperatureMaxC: number
+  precipitationSumMm: number
+  precipitationProbabilityMax: number
+  windSpeedMaxKmh: number
+}
+
+export interface WeatherForecast {
+  locationLabel: string
+  latitude: number
+  longitude: number
+  fetchedAt: string
+  hourly: HourlyWeatherPoint[]
+  daily: DailyWeatherPoint[]
+  source: 'open-meteo'
+}
+
+export interface WeatherAssessment {
+  risk: WeatherRisk
+  suitable: boolean
+  badgeLabel: string
+  badgeIcon: string
+  title: string
+  message: string
+  action: string
+  setting: VenueSetting
+  forecastAvailable: boolean
+  temperatureC?: number
+  description?: string
+  rainProbability?: number
+  windSpeedKmh?: number
+  precipitationMm?: number
+  weatherCode?: number
+  dayLabel?: string
 }

@@ -1,17 +1,31 @@
 import { useParams } from 'react-router-dom'
 import { Check, MapPin } from 'lucide-react'
-import { getHost } from '../data/catalog'
+import { getHost, getSession } from '../data/catalog'
 import { money, whenRange } from '../lib/format'
+import { assessWeather } from '../lib/weather/assessment'
+import { useWeather } from '../hooks/useWeather'
+import { WeatherAlternativeRecommendations, WeatherDetailsCard } from '../components/weather'
 import { Avatar, ButtonLink, Shell, useTitle } from '../components/ui'
 import { useApp } from '../store/store'
 
 export function Confirmation() {
   const { bookingId = '' } = useParams()
   const { user } = useApp()
+  const { forecast, error, loading } = useWeather(user?.area)
   const booking = user?.bookings.find((item) => item.id === bookingId)
   useTitle('You’re back in play')
   if (!user || !booking) return <Shell><div className="empty"><b>We couldn’t find that booking.</b><ButtonLink to="/my-sessions">View my sessions</ButtonLink></div></Shell>
   const host = getHost(booking.snapshot.hostId)
+  const session = getSession(booking.sessionId)
+  const weather = !loading
+    ? assessWeather({
+        startsAt: booking.snapshot.startsAt,
+        setting: booking.snapshot.setting,
+        sport: booking.snapshot.sport,
+        forecast,
+        forecastError: error,
+      })
+    : null
   const invite = user.invitations.find((item) => item.sessionId === booking.sessionId && (item.status === 'pending' || item.status === 'accepted'))
   const buddy = invite ? user && invite.buddyId : undefined
   void buddy
@@ -32,6 +46,8 @@ export function Confirmation() {
           <p className="tiny">{booking.snapshot.equipmentNote}</p>
           {booking.flexNote && <p className="notice">{booking.flexNote}</p>}
         </article>
+        {weather ? <WeatherDetailsCard assessment={weather} startsAt={booking.snapshot.startsAt} /> : null}
+        {weather && session ? <WeatherAlternativeRecommendations session={session} forecast={forecast} assessment={weather} /> : null}
         <article className="card pad cluster">
           <Avatar src={host.avatar} name={host.name} size={48} />
           <div><b>Host {host.name}</b><p className="tiny">{host.name} will be there to welcome you. Look for the Back in Play check-in clipboard.</p></div>

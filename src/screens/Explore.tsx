@@ -5,6 +5,8 @@ import { SPORT_ORDER } from '../data/options'
 import { sessions } from '../data/catalog'
 import { filterSessions } from '../lib/filter'
 import { money, sportLabel } from '../lib/format'
+import { assessSessionWeather } from '../lib/weather/assessment'
+import { useWeather } from '../hooks/useWeather'
 import { SessionCard, Shell, useTitle } from '../components/ui'
 import { useApp } from '../store/store'
 
@@ -12,10 +14,15 @@ export function Explore() {
   useTitle('Explore')
   const { user, filters, setFilters } = useApp()
   const navigate = useNavigate()
+  const { forecast, error, loading } = useWeather(user?.area)
   if (!user) return null
   const results = filterSessions(sessions, filters)
   const allGear = results.length > 0 && results.every((session) => session.equipmentIncluded)
   const active = [filters.equipmentOnly, filters.days.length > 0, filters.levels.length > 0, filters.distance != null, filters.maxPrice < user.preferences.maxPrice].filter(Boolean).length
+  const flagged = results.filter((session) => {
+    const assessment = assessSessionWeather(session, forecast, error)
+    return session.setting !== 'indoor' && (assessment.risk === 'yellow' || assessment.risk === 'orange' || assessment.risk === 'red')
+  }).length
 
   return (
     <Shell nav>
@@ -47,9 +54,13 @@ export function Explore() {
           <button className={filters.sports.length === 0 ? 'chip navy' : 'chip'} aria-pressed={filters.sports.length === 0} onClick={() => setFilters({ sports: [] })}>All</button>
         </div>
         <div className="between">
-          <p className="tiny" aria-live="polite">Showing {results.length} affordable {results.length === 1 ? 'session' : 'sessions'}</p>
+          <p className="tiny" aria-live="polite">
+            Showing {results.length} affordable {results.length === 1 ? 'session' : 'sessions'}
+            {!loading && flagged > 0 ? ` · ${flagged} weather-aware` : ''}
+          </p>
           <button className={filters.equipmentOnly ? 'chip on' : 'chip'} aria-pressed={filters.equipmentOnly} onClick={() => setFilters({ equipmentOnly: !filters.equipmentOnly })}>{allGear && !filters.equipmentOnly ? 'All equipment included' : 'Equipment included'}</button>
         </div>
+        {error ? <p className="tiny notice">Weather information cannot currently be retrieved. Outdoor sessions are still listed so you can decide for yourself.</p> : null}
         <label className="between tiny">
           Sort
           <select className="select" value={filters.sort} aria-label="Sort sessions" onChange={(event) => setFilters({ sort: event.target.value as typeof filters.sort })}>
@@ -60,9 +71,17 @@ export function Explore() {
           </select>
         </label>
         <div className="stack">
-          {results.map((session) => (
-            <SessionCard key={session.id} session={session} booked={user.bookings.some((booking) => booking.sessionId === session.id && booking.status === 'upcoming')} />
-          ))}
+          {results.map((session) => {
+            const weather = loading ? null : assessSessionWeather(session, forecast, error)
+            return (
+              <SessionCard
+                key={session.id}
+                session={session}
+                weather={weather}
+                booked={user.bookings.some((booking) => booking.sessionId === session.id && booking.status === 'upcoming')}
+              />
+            )
+          })}
           {results.length === 0 && (
             <div className="empty card pad">
               <b>No sessions fit these filters yet.</b>

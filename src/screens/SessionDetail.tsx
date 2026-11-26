@@ -1,7 +1,10 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Bookmark, Check, MapPin, Share2 } from 'lucide-react'
-import { getHost, getPerson, getSession, getVenue } from '../data/catalog'
+import { getHost, getPerson, getSession, getVenue, sessionSettingLabel } from '../data/catalog'
 import { money, sportLabel, whenRange } from '../lib/format'
+import { assessSessionWeather } from '../lib/weather/assessment'
+import { useWeather } from '../hooks/useWeather'
+import { WeatherAlternativeRecommendations, WeatherDetailsCard } from '../components/weather'
 import { Avatar, Button, IconButton, Shell, useTitle } from '../components/ui'
 import { useApp } from '../store/store'
 
@@ -11,6 +14,7 @@ export function SessionDetail() {
   useTitle(session?.name ?? 'Session')
   const { user, book, toggleSave, notify } = useApp()
   const navigate = useNavigate()
+  const { forecast, error, loading } = useWeather(user?.area)
   if (!user) return null
   if (!session) {
     return <Shell><div className="empty"><b>That session has closed.</b><Button onClick={() => navigate('/explore')}>Back to explore</Button></div></Shell>
@@ -20,6 +24,7 @@ export function SessionDetail() {
   const saved = user.savedSessionIds.includes(session.id)
   const existing = user.bookings.find((booking) => booking.sessionId === session.id && booking.status === 'upcoming')
   const faces = session.attendeeIds.map((personId) => getPerson(personId)).filter(Boolean)
+  const weather = loading ? null : assessSessionWeather(session, forecast, error)
 
   async function share() {
     const url = window.location.href
@@ -52,6 +57,7 @@ export function SessionDetail() {
         <div className="hero-copy">
           <div className="cluster">
             <span className="pill ghost">Local Play Pass</span>
+            <span className="pill ghost">{sessionSettingLabel(session.setting)}</span>
             <span className="pill ghost">{session.level === 'starting' ? 'Beginners & returning' : session.levelLabel}</span>
           </div>
         </div>
@@ -66,6 +72,14 @@ export function SessionDetail() {
           </div>
           <p><b>{whenRange(session.startsAt, session.endsAt)}</b></p>
         </div>
+        {weather ? (
+          <>
+            <WeatherDetailsCard assessment={weather} startsAt={session.startsAt} />
+            <WeatherAlternativeRecommendations session={session} forecast={forecast} assessment={weather} />
+          </>
+        ) : (
+          <p className="tiny">Checking the local forecast…</p>
+        )}
         <section className="breakdown">
           <div className="between"><b>Transparent price breakdown</b><span className="pill">No hidden fees</span></div>
           <div className="row"><span>{session.courtLabel}</span><span>{money(session.courtFee)}</span></div>

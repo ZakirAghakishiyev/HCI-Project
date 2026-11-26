@@ -1,22 +1,27 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Bell, Flag, Sparkles } from 'lucide-react'
 import { Avatar, ButtonLink, SessionCard, Shell, SportIcon, useTitle } from '../components/ui'
+import { HomeWeatherSection } from '../components/weather'
 import { useApp } from '../store/store'
 import { matchBuddies, recommendSessions } from '../lib/filter'
 import { filterSessions } from '../lib/filter'
 import { sessions } from '../data/catalog'
 import { firstName, greeting, money, relativeLabel, sportLabel, whenShort } from '../lib/format'
 import { journeyStage, upcomingOf } from '../lib/user'
+import { assessSessionWeather } from '../lib/weather/assessment'
+import { useWeather } from '../hooks/useWeather'
 
 export function Home() {
   const { user, filters } = useApp()
   useTitle('Home')
+  const { forecast, error, loading } = useWeather(user?.area)
   if (!user) return null
   const name = firstName(user.name)
   const sport = user.preferences.sports[0]
   const stage = journeyStage(user)
   const upcoming = upcomingOf(user)[0]
   const recommendation = recommendSessions(user, 1)[0]
+  const recommendationWeather = recommendation && !loading ? assessSessionWeather(recommendation, forecast, error) : null
   const buddies = matchBuddies(user, { sport: sport ?? 'all', level: 'all', time: 'all' }).slice(0, 4)
   const affordable = filterSessions(sessions, { ...filters, sports: [], query: '', equipmentOnly: false, days: [], levels: [], distance: null, maxPrice: user.preferences.maxPrice })
   const nextLocked = user.achievements.find((item) => !item.unlocked)
@@ -66,6 +71,19 @@ export function Home() {
           </Link>
         )}
 
+        {upcoming && (
+          <HomeWeatherSection
+            sessionId={upcoming.sessionId}
+            name={upcoming.snapshot.name}
+            startsAt={upcoming.snapshot.startsAt}
+            setting={upcoming.snapshot.setting}
+            sport={upcoming.snapshot.sport}
+            forecast={forecast}
+            error={error}
+            loading={loading}
+          />
+        )}
+
         <section className="stack">
           <div className="between">
             <h2 className="section-label">Your next step</h2>
@@ -89,7 +107,7 @@ export function Home() {
             </div>
             <Link to="/explore"><b>See all ({affordable.length})</b></Link>
           </div>
-          {recommendation ? <SessionCard session={recommendation} layout="home" booked={user.bookings.some((booking) => booking.sessionId === recommendation.id && booking.status === 'upcoming')} /> : <div className="empty"><b>Nothing under your budget yet.</b><p className="tiny">Raise the max price in filters and friendly sessions will show up.</p></div>}
+          {recommendation ? <SessionCard session={recommendation} layout="home" weather={recommendationWeather} booked={user.bookings.some((booking) => booking.sessionId === recommendation.id && booking.status === 'upcoming')} /> : <div className="empty"><b>Nothing under your budget yet.</b><p className="tiny">Raise the max price in filters and friendly sessions will show up.</p></div>}
         </section>
 
         <section className="stack">
