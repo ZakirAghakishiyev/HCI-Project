@@ -73,7 +73,7 @@ export function Explore() {
             </select>
           </label>
         </div>
-        <div className="card-grid">
+        <div className="stack">
           {results.map((session) => {
             const weather = loading ? null : assessSessionWeather(session, forecast, error)
             return (
@@ -87,7 +87,7 @@ export function Explore() {
             )
           })}
           {results.length === 0 && (
-            <div className="empty card pad" style={{ gridColumn: '1 / -1' }}>
+            <div className="empty card pad">
               <b>No sessions fit these filters yet.</b>
               <p className="tiny">Try a wider distance or a slightly higher budget. There are friendly games just outside it.</p>
               <button className="btn btn-navy" onClick={() => setFilters({ sports: [], query: '', equipmentOnly: false, days: [], levels: [], distance: null, maxPrice: Math.max(user.preferences.maxPrice, 8) })}>Widen the search</button>
