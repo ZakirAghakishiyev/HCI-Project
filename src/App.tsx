@@ -18,6 +18,8 @@ import { CheckIn } from './screens/CheckIn'
 import { Progress } from './screens/Progress'
 import { Profile } from './screens/Profile'
 import { Notifications } from './screens/Notifications'
+import { SessionForecast } from './screens/SessionForecast'
+import { WeatherAlternatives } from './screens/WeatherAlternatives'
 
 function GuestOnly({ children }: { children: ReactNode }) {
   const { user } = useApp()
@@ -52,6 +54,8 @@ export default function App() {
         <Route path="/explore" element={<RequireReady><Explore /></RequireReady>} />
         <Route path="/filters" element={<RequireReady><Filters /></RequireReady>} />
         <Route path="/sessions/:id" element={<RequireReady><SessionDetail /></RequireReady>} />
+        <Route path="/sessions/:id/forecast" element={<RequireReady><SessionForecast /></RequireReady>} />
+        <Route path="/sessions/:id/alternatives" element={<RequireReady><WeatherAlternatives /></RequireReady>} />
         <Route path="/sessions/:id/prepare" element={<RequireReady><KnowBefore /></RequireReady>} />
         <Route path="/confirm/:bookingId" element={<RequireReady><Confirmation /></RequireReady>} />
         <Route path="/buddies" element={<RequireReady><Buddies /></RequireReady>} />

@@ -4,7 +4,7 @@ import { getHost, getPerson, getSession, getVenue, sessionSettingLabel } from '.
 import { money, sportLabel, whenRange } from '../lib/format'
 import { assessSessionWeather } from '../lib/weather/assessment'
 import { useWeather } from '../hooks/useWeather'
-import { WeatherAlternativeRecommendations, WeatherDetailsCard } from '../components/weather'
+import { WeatherDetailBanner } from '../components/weather'
 import { Avatar, Button, IconButton, Shell, useTitle } from '../components/ui'
 import { useApp } from '../store/store'
 
@@ -72,14 +72,7 @@ export function SessionDetail() {
           </div>
           <p><b>{whenRange(session.startsAt, session.endsAt)}</b></p>
         </div>
-        {weather ? (
-          <>
-            <WeatherDetailsCard assessment={weather} startsAt={session.startsAt} />
-            <WeatherAlternativeRecommendations session={session} forecast={forecast} assessment={weather} />
-          </>
-        ) : (
-          <p className="tiny">Checking the local forecast…</p>
-        )}
+        {weather ? <WeatherDetailBanner sessionId={session.id} assessment={weather} /> : <p className="tiny">Checking the local forecast…</p>}
         <section className="breakdown">
           <div className="between"><b>Transparent price breakdown</b><span className="pill">No hidden fees</span></div>
           <div className="row"><span>{session.courtLabel}</span><span>{money(session.courtFee)}</span></div>

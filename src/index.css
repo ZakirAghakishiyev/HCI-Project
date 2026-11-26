@@ -306,6 +306,7 @@ h1, h2, h3, p { margin: 0; }
   --weather-yellow-bg: #fff6d6;
   --weather-orange: #9a4d12;
   --weather-orange-bg: #ffe8d4;
+  --weather-orange-soft: #fff1e4;
   --weather-red: #8f2430;
   --weather-red-bg: #fde6e8;
   --weather-unknown: #5a6570;
@@ -317,11 +318,70 @@ h1, h2, h3, p { margin: 0; }
   border: 1px solid transparent;
 }
 .weather-badge.compact { padding: 4px 8px; font-size: 11px; }
+.weather-badge.overlay {
+  position: absolute; left: 10px; bottom: 10px; z-index: 1;
+  box-shadow: 0 6px 16px rgba(16,28,44,.18);
+}
 .weather-badge.risk-green { background: var(--weather-green-bg); color: var(--weather-green); border-color: #c9e6cf; }
-.weather-badge.risk-yellow { background: var(--weather-yellow-bg); color: var(--weather-yellow); border-color: #f0df9a; }
-.weather-badge.risk-orange { background: var(--weather-orange-bg); color: var(--weather-orange); border-color: #f0c39a; }
-.weather-badge.risk-red { background: var(--weather-red-bg); color: var(--weather-red); border-color: #efb8be; }
+.weather-badge.risk-yellow { background: #f5a623; color: #fff; border-color: #f5a623; }
+.weather-badge.risk-orange { background: #f5a623; color: #fff; border-color: #f5a623; }
+.weather-badge.risk-red { background: var(--weather-red); color: #fff; border-color: var(--weather-red); }
 .weather-badge.risk-unknown { background: var(--weather-unknown-bg); color: var(--weather-unknown); border-color: #d5dde3; }
+.weather-chip {
+  display: inline-flex; align-items: center; gap: 5px; width: fit-content;
+  border-radius: 999px; padding: 4px 9px; font-size: 11px; font-weight: 700;
+}
+.weather-chip.risk-green { background: var(--weather-green-bg); color: var(--weather-green); }
+.weather-chip.risk-yellow, .weather-chip.risk-orange { background: #ffe0b8; color: #9a4d12; }
+.weather-chip.risk-red { background: #f8d2d6; color: var(--weather-red); }
+.weather-chip.risk-unknown { background: var(--weather-unknown-bg); color: var(--weather-unknown); }
+.weather-chip.solid.risk-orange, .weather-chip.solid.risk-yellow { background: #f5a623; color: #fff; }
+.weather-chip.solid.risk-red { background: var(--weather-red); color: #fff; }
+.weather-chip.solid.risk-green { background: var(--weather-green); color: #fff; }
+.weather-smart-active {
+  display: inline-flex; align-items: center; gap: 5px; color: var(--weather-green);
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.weather-alt-link {
+  display: inline-flex; align-items: center; gap: 4px; color: #c46a12;
+  font-size: 12.5px; font-weight: 700; text-decoration: none;
+}
+.session-card-media {
+  position: relative; height: 132px; border-radius: 16px; overflow: hidden; background: #dfe6df;
+}
+.session-card-media img { width: 100%; height: 100%; object-fit: cover; }
+.session-card-media .media-price { position: absolute; top: 10px; right: 10px; z-index: 1; }
+.weather-banner {
+  display: flex; align-items: center; gap: 10px; text-decoration: none;
+  border-radius: 18px; padding: 12px 14px; border: 1px solid transparent;
+}
+.weather-banner.risk-yellow, .weather-banner.risk-orange { background: var(--weather-orange-soft); border-color: #f0c39a; }
+.weather-banner.risk-red { background: var(--weather-red-bg); border-color: #efb8be; }
+.weather-banner.risk-green { background: var(--weather-green-bg); border-color: #c9e6cf; }
+.weather-banner.risk-unknown { background: var(--weather-unknown-bg); border-color: #d5dde3; }
+.weather-banner-icon {
+  width: 40px; height: 40px; border-radius: 999px; background: rgba(255,255,255,.7);
+  display: grid; place-items: center; flex: none; color: var(--weather-orange);
+}
+.weather-banner.risk-red .weather-banner-icon { color: var(--weather-red); }
+.weather-banner.risk-green .weather-banner-icon { color: var(--weather-green); }
+.weather-banner-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.weather-banner-copy b { font-size: 14.5px; letter-spacing: -0.02em; }
+.weather-banner-copy small { color: var(--muted); font-size: 12px; }
+.weather-banner-meta { display: flex; align-items: center; gap: 8px; flex: none; }
+.weather-booking-block {
+  border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+  border: 1px solid transparent;
+}
+.weather-booking-block.risk-orange, .weather-booking-block.risk-yellow { background: var(--weather-orange-soft); border-color: #f0c39a; }
+.weather-booking-block.risk-red { background: var(--weather-red-bg); border-color: #efb8be; }
+.weather-booking-block.risk-green { background: var(--weather-green-bg); border-color: #c9e6cf; }
+.weather-booking-block.risk-unknown { background: var(--weather-unknown-bg); border-color: #d5dde3; }
+.weather-booking-icon {
+  width: 28px; height: 28px; border-radius: 999px; background: #fff; color: #c46a12;
+  display: grid; place-items: center; flex: none;
+}
+.weather-booking-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .weather-card {
   background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px;
   display: flex; flex-direction: column; gap: 8px;
@@ -332,10 +392,55 @@ h1, h2, h3, p { margin: 0; }
 .weather-card.risk-green { border-color: #c9e6cf; }
 .weather-card.risk-unknown { border-color: #d5dde3; }
 .weather-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--lime-3); display: grid; place-items: center; font-size: 18px; flex: none; }
-.weather-copy { font-size: 13.5px; line-height: 1.45; color: #314038; }
+.weather-copy { font-size: 13.5px; line-height: 1.45; color: #314038; margin: 0; }
 .weather-home { gap: 10px; }
-.weather-alts { border-style: solid; }
-.alt-row {
-  display: flex; flex-direction: column; gap: 10px; padding: 12px;
-  background: var(--bg); border-radius: 16px; border: 1px solid var(--line);
+.forecast-navy {
+  background: var(--navy); color: #fff; border-radius: 22px; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
 }
+.forecast-main { display: flex; gap: 12px; align-items: center; }
+.forecast-big-icon {
+  width: 56px; height: 56px; border-radius: 18px; background: rgba(255,255,255,.1);
+  display: grid; place-items: center; flex: none; font-size: 26px; color: #d7ecff;
+}
+.forecast-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.forecast-metric {
+  background: rgba(255,255,255,.08); border-radius: 14px; padding: 10px 8px;
+  display: flex; flex-direction: column; gap: 4px; min-height: 84px;
+}
+.forecast-metric b { font-size: 15px; letter-spacing: -0.02em; }
+.forecast-metric .tiny { color: rgba(255,255,255,.7); }
+.forecast-metric-icon { color: var(--lime); }
+.why-caution {
+  background: var(--weather-orange-soft); border: 1px solid #f0c39a; border-radius: 18px;
+  padding: 14px; display: flex; flex-direction: column; gap: 8px;
+}
+.why-caution.risk-red { background: var(--weather-red-bg); border-color: #efb8be; }
+.why-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: #314038; }
+.indoor-alt-prompt {
+  display: flex; gap: 10px; align-items: flex-start; background: #eef8e8; border: 1px solid #cfe6c4;
+  border-radius: 16px; padding: 12px 14px; color: #243015;
+}
+.indoor-alt-prompt b { display: block; margin-bottom: 2px; }
+.severe-card {
+  background: var(--weather-red-bg); border: 1.5px solid #efb8be; border-radius: 22px;
+  padding: 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.severe-icon { font-size: 34px; }
+.severe-session {
+  background: #fff; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 6px;
+}
+.weather-smart-match {
+  display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+  background: var(--navy); color: var(--lime); border-radius: 999px; padding: 6px 10px;
+  font-size: 12px; font-weight: 700;
+}
+.original-weather-row {
+  display: flex; justify-content: space-between; gap: 12px; align-items: center;
+  background: #eef1ee; border-radius: 16px; padding: 12px 14px;
+}
+.alt-hero { overflow: hidden; }
+.alt-hero-media { position: relative; height: 170px; background: #dfe6df; }
+.alt-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.alt-hero-media .alt-price { position: absolute; top: 10px; right: 10px; z-index: 1; }
+.alt-hero-media .alt-court { position: absolute; left: 10px; bottom: 10px; z-index: 1; background: rgba(255,255,255,.92); }

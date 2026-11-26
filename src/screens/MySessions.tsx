@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getPerson, sessionSettingLabel } from '../data/catalog'
-import { money, relativeLabel, whenRange } from '../lib/format'
+import { money, relativeLabel, sportLabel, whenRange } from '../lib/format'
 import { completedOf, upcomingOf } from '../lib/user'
 import { assessWeather } from '../lib/weather/assessment'
 import { useWeather } from '../hooks/useWeather'
-import { BookingWeatherActions, WeatherBadge, WeatherDetailsCard } from '../components/weather'
+import { BookingWeatherBlock } from '../components/weather'
 import { Button, ButtonLink, Sheet, Shell, useTitle } from '../components/ui'
 import { useApp } from '../store/store'
 
@@ -64,25 +64,19 @@ export function MySessions() {
             return (
               <article key={booking.id} className="card pad stack">
                 <div className="between">
-                  <div>
-                    <div className="tiny">{booking.snapshot.levelLabel} · {sessionSettingLabel(booking.snapshot.setting)}</div>
-                    <h2 className="h2" style={{ fontSize: 18 }}>{booking.snapshot.name}</h2>
+                  <div className="cluster">
+                    <span className="pill">{sportLabel(booking.snapshot.sport)}</span>
+                    <span className="tag">{booking.snapshot.levelLabel}</span>
+                    <span className="tag">{sessionSettingLabel(booking.snapshot.setting)}</span>
                   </div>
                   <span className="price-pill">{booking.snapshot.shortSession ? 'Free reset' : `${money(booking.snapshot.price)} paid`}</span>
                 </div>
+                <h2 className="h2" style={{ fontSize: 18 }}>{booking.snapshot.name}</h2>
                 <p className="tiny">{whenRange(booking.snapshot.startsAt, booking.snapshot.endsAt)}</p>
                 <p className="tiny">{booking.snapshot.place}</p>
                 {buddy && <p className="tiny">Sport buddy: {buddy.name} · {invites[0].status === 'accepted' ? 'Accepted' : 'Pending accept'}</p>}
                 {booking.flexNote && <p className="tiny">{booking.flexNote}</p>}
-                {weather ? (
-                  <>
-                    <WeatherBadge assessment={weather} />
-                    {(weather.risk === 'yellow' || weather.risk === 'orange' || weather.risk === 'red' || weather.risk === 'unknown') && (
-                      <WeatherDetailsCard assessment={weather} startsAt={booking.snapshot.startsAt} />
-                    )}
-                    <BookingWeatherActions sessionId={booking.sessionId} assessment={weather} />
-                  </>
-                ) : null}
+                {weather ? <BookingWeatherBlock sessionId={booking.sessionId} assessment={weather} /> : null}
                 <div className="cluster">
                   {booking.sessionId !== 'short-reset' && <ButtonLink to={booking.status === 'upcoming' ? `/confirm/${booking.id}` : `/sessions/${booking.sessionId}`} size="sm" variant="outline">View Details</ButtonLink>}
                   {booking.status === 'upcoming' && <ButtonLink to={`/reschedule/${booking.id}`} size="sm" variant="navy">Reschedule</ButtonLink>}

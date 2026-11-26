@@ -280,4 +280,8 @@ export interface WeatherAssessment {
   precipitationMm?: number
   weatherCode?: number
   dayLabel?: string
+  summaryLine?: string
+  suitabilityLabel?: string
+  impactReasons?: string[]
+  windowNote?: string
 }

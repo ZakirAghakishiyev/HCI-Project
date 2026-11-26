@@ -2,9 +2,9 @@ import { useParams } from 'react-router-dom'
 import { Check, MapPin } from 'lucide-react'
 import { getHost, getSession } from '../data/catalog'
 import { money, whenRange } from '../lib/format'
-import { assessWeather } from '../lib/weather/assessment'
+import { assessWeather, needsAlternative } from '../lib/weather/assessment'
 import { useWeather } from '../hooks/useWeather'
-import { WeatherAlternativeRecommendations, WeatherDetailsCard } from '../components/weather'
+import { WeatherDetailBanner } from '../components/weather'
 import { Avatar, ButtonLink, Shell, useTitle } from '../components/ui'
 import { useApp } from '../store/store'
 
@@ -27,8 +27,6 @@ export function Confirmation() {
       })
     : null
   const invite = user.invitations.find((item) => item.sessionId === booking.sessionId && (item.status === 'pending' || item.status === 'accepted'))
-  const buddy = invite ? user && invite.buddyId : undefined
-  void buddy
   const buddyName = invite ? (invite.buddyId.charAt(0).toUpperCase() + invite.buddyId.slice(1)) : ''
   return (
     <Shell footer={<div className="stack"><ButtonLink to="/my-sessions" variant="navy" block>View My Sessions</ButtonLink><ButtonLink to="/explore" variant="ghost" block>Explore More Sessions</ButtonLink></div>}>
@@ -46,8 +44,10 @@ export function Confirmation() {
           <p className="tiny">{booking.snapshot.equipmentNote}</p>
           {booking.flexNote && <p className="notice">{booking.flexNote}</p>}
         </article>
-        {weather ? <WeatherDetailsCard assessment={weather} startsAt={booking.snapshot.startsAt} /> : null}
-        {weather && session ? <WeatherAlternativeRecommendations session={session} forecast={forecast} assessment={weather} /> : null}
+        {weather && session ? <WeatherDetailBanner sessionId={session.id} assessment={weather} /> : null}
+        {weather && session && needsAlternative(weather) ? (
+          <ButtonLink to={`/sessions/${session.id}/alternatives`} variant="lime" block>Find Indoor Alternative</ButtonLink>
+        ) : null}
         <article className="card pad cluster">
           <Avatar src={host.avatar} name={host.name} size={48} />
           <div><b>Host {host.name}</b><p className="tiny">{host.name} will be there to welcome you. Look for the Back in Play check-in clipboard.</p></div>

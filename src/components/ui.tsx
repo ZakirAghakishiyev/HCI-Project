@@ -6,7 +6,7 @@ import { SPORT_META } from '../data/options'
 import { getHost, getVenue, sessionSettingLabel } from '../data/catalog'
 import { money, sportLabel, whenShort } from '../lib/format'
 import { useApp } from '../store/store'
-import { WeatherBadge } from './weather'
+import { ExploreWeatherCue, WeatherBadge } from './weather'
 
 export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
@@ -70,7 +70,7 @@ export function IconButton({ label, children, className, type = 'button', ...pro
 
 const TABS = [
   { to: '/home', label: 'Home', icon: Home, on: (path: string) => path.startsWith('/home') },
-  { to: '/explore', label: 'Explore', icon: Compass, on: (path: string) => ['/explore', '/buddies', '/sessions', '/filters'].some((item) => path.startsWith(item)) },
+  { to: '/explore', label: 'Explore', icon: Compass, on: (path: string) => ['/explore', '/buddies', '/sessions', '/filters'].some((item) => path.startsWith(item)) || path.includes('/forecast') || path.includes('/alternatives') },
   { to: '/my-sessions', label: 'My Sessions', icon: CalendarDays, on: (path: string) => path.startsWith('/my-sessions') || path.startsWith('/reschedule') },
   { to: '/progress', label: 'Progress', icon: TrendingUp, on: (path: string) => path.startsWith('/progress') || path.startsWith('/check-in') },
   { to: '/profile', label: 'Profile', icon: UserRound, on: (path: string) => path.startsWith('/profile') || path.startsWith('/notifications') },
@@ -144,27 +144,33 @@ export function SessionCard({
   layout = 'explore',
   booked,
   weather,
+  forecast,
 }: {
   session: Session
   layout?: 'explore' | 'home'
   booked?: boolean
   weather?: WeatherAssessment | null
+  forecast?: import('../types').WeatherForecast | null
 }) {
   const venue = getVenue(session.venueId)
   const host = getHost(session.hostId)
   return (
     <article className="session-card">
+      <div className="session-card-media">
+        <img src={session.image} alt="" />
+        <span className="price-pill media-price">{session.price === 0 ? 'Free' : `${money(session.price)} total`}</span>
+        {weather ? <WeatherBadge assessment={weather} overlay /> : null}
+      </div>
       <div className="between">
         <div className="cluster">
           <span className="sport-bubble"><SportIcon sport={session.sport} /></span>
           <b>{sportLabel(session.sport)}</b>
         </div>
-        <span className="price-pill">{session.price === 0 ? 'Free' : `${money(session.price)} total`}</span>
+        <span className="tag">{sessionSettingLabel(session.setting)}</span>
       </div>
       {session.eyebrow ? <div className="eyebrow">{session.eyebrow}</div> : null}
       <div className="between">
         <span className="cluster">
-          <span className="tag">{sessionSettingLabel(session.setting)}</span>
           {session.tags
             .filter((tag) => !/^(indoor|outdoor|weather-dependent)$/i.test(tag))
             .slice(0, 2)
@@ -174,7 +180,11 @@ export function SessionCard({
       </div>
       <h3>{session.name}</h3>
       <p className="tiny">{whenShort(session.startsAt)} · {venue.name}</p>
-      {weather ? <WeatherBadge assessment={weather} /> : null}
+      {weather && layout === 'explore' ? (
+        <ExploreWeatherCue session={session} assessment={weather} forecast={forecast ?? null} />
+      ) : weather ? (
+        <WeatherBadge assessment={weather} />
+      ) : null}
       <div className="between">
         <span className="tiny">{layout === 'home' ? `${session.equipmentIncluded ? 'Gear included' : 'Kit noted'} · ${host.name} hosting` : session.cardNote}</span>
         <ButtonLink to={`/sessions/${session.id}`} variant="navy" size="sm">{booked ? 'View booking' : layout === 'home' ? 'Book Pass' : 'View Details'}</ButtonLink>

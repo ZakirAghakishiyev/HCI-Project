@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { Search, SlidersHorizontal, Sparkles } from 'lucide-react'
 import type { SportId } from '../types'
 import { SPORT_ORDER } from '../data/options'
 import { sessions } from '../data/catalog'
@@ -58,18 +58,21 @@ export function Explore() {
             Showing {results.length} affordable {results.length === 1 ? 'session' : 'sessions'}
             {!loading && flagged > 0 ? ` · ${flagged} weather-aware` : ''}
           </p>
-          <button className={filters.equipmentOnly ? 'chip on' : 'chip'} aria-pressed={filters.equipmentOnly} onClick={() => setFilters({ equipmentOnly: !filters.equipmentOnly })}>{allGear && !filters.equipmentOnly ? 'All equipment included' : 'Equipment included'}</button>
+          <span className="weather-smart-active"><Sparkles size={13} /> Weather-Smart active</span>
         </div>
         {error ? <p className="tiny notice">Weather information cannot currently be retrieved. Outdoor sessions are still listed so you can decide for yourself.</p> : null}
-        <label className="between tiny">
-          Sort
-          <select className="select" value={filters.sort} aria-label="Sort sessions" onChange={(event) => setFilters({ sort: event.target.value as typeof filters.sort })}>
-            <option value="recommended">Recommended</option>
-            <option value="soonest">Soonest</option>
-            <option value="price">Lowest price</option>
-            <option value="distance">Nearest</option>
-          </select>
-        </label>
+        <div className="between">
+          <button className={filters.equipmentOnly ? 'chip on' : 'chip'} aria-pressed={filters.equipmentOnly} onClick={() => setFilters({ equipmentOnly: !filters.equipmentOnly })}>{allGear && !filters.equipmentOnly ? 'All equipment included' : 'Equipment included'}</button>
+          <label className="tiny cluster">
+            Sort
+            <select className="select" value={filters.sort} aria-label="Sort sessions" onChange={(event) => setFilters({ sort: event.target.value as typeof filters.sort })}>
+              <option value="recommended">Recommended</option>
+              <option value="soonest">Soonest</option>
+              <option value="price">Lowest price</option>
+              <option value="distance">Nearest</option>
+            </select>
+          </label>
+        </div>
         <div className="stack">
           {results.map((session) => {
             const weather = loading ? null : assessSessionWeather(session, forecast, error)
@@ -78,6 +81,7 @@ export function Explore() {
                 key={session.id}
                 session={session}
                 weather={weather}
+                forecast={forecast}
                 booked={user.bookings.some((booking) => booking.sessionId === session.id && booking.status === 'upcoming')}
               />
             )

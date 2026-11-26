@@ -1,109 +1,208 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight, Check, CloudRain, Home, Info, TriangleAlert } from 'lucide-react'
 import type { Session, WeatherAssessment, WeatherForecast } from '../types'
-import { sessionSettingLabel } from '../data/catalog'
-import { clock, money, sportLabel, whenShort } from '../lib/format'
-import { alternativeHeadline, findWeatherAlternatives, type WeatherAlternative } from '../lib/weather/alternatives'
-import { assessSessionWeather } from '../lib/weather/assessment'
+import { getVenue, sessionSettingLabel } from '../data/catalog'
+import { money, sportLabel, whenShort } from '../lib/format'
+import { findWeatherAlternatives } from '../lib/weather/alternatives'
+import { assessSessionWeather, needsAlternative } from '../lib/weather/assessment'
 import { ButtonLink, cn } from './ui'
 
 export function WeatherBadge({
   assessment,
   compact = false,
+  overlay = false,
 }: {
   assessment: WeatherAssessment
   compact?: boolean
+  overlay?: boolean
 }) {
   return (
-    <span className={cn('weather-badge', `risk-${assessment.risk}`, compact && 'compact')} title={assessment.message}>
-      <span aria-hidden="true">{assessment.badgeIcon}</span>
+    <span className={cn('weather-badge', `risk-${assessment.risk}`, compact && 'compact', overlay && 'overlay')} title={assessment.message}>
+      <span aria-hidden="true">{assessment.setting === 'indoor' ? '✓' : assessment.badgeIcon}</span>
       <span>{assessment.badgeLabel}</span>
     </span>
   )
 }
 
-export function WeatherDetailsCard({
-  assessment,
-  startsAt,
-  showAction = true,
-}: {
-  assessment: WeatherAssessment
-  startsAt: string
-  showAction?: boolean
-}) {
-  const start = new Date(startsAt)
-  return (
-    <section className={cn('weather-card', `risk-${assessment.risk}`)}>
-      <div className="between">
-        <div className="cluster">
-          <span className="weather-icon" aria-hidden="true">{assessment.badgeIcon}</span>
-          <div>
-            <div className="tiny">{whenShort(startsAt)}</div>
-            <b>{assessment.setting === 'indoor' ? 'Indoor session' : assessment.description ?? assessment.title}</b>
-          </div>
-        </div>
-        <WeatherBadge assessment={assessment} compact />
-      </div>
-      {assessment.forecastAvailable && assessment.setting !== 'indoor' ? (
-        <p className="tiny">
-          {assessment.temperatureC != null ? `${assessment.temperatureC}°C` : '—'}
-          {assessment.rainProbability != null ? ` · ${assessment.rainProbability}% chance of rain` : ''}
-          {assessment.windSpeedKmh != null ? ` · ${assessment.windSpeedKmh} km/h wind` : ''}
-        </p>
-      ) : null}
-      {assessment.forecastAvailable && assessment.setting === 'indoor' && assessment.temperatureC != null ? (
-        <p className="tiny">Outside around {clock(start)}: {assessment.temperatureC}°C · {assessment.description}</p>
-      ) : null}
-      {showAction ? <p className="weather-copy">{assessment.action}</p> : null}
-      {!assessment.forecastAvailable ? <p className="weather-copy">{assessment.message}</p> : null}
-    </section>
-  )
-}
-
-export function WeatherAlternativeRecommendations({
-  session,
-  forecast,
+/** Screen 07 — clickable caution/status banner on session details */
+export function WeatherDetailBanner({
+  sessionId,
   assessment,
 }: {
-  session: Session
-  forecast: WeatherForecast | null
+  sessionId: string
   assessment: WeatherAssessment
 }) {
-  if (assessment.risk !== 'orange' && assessment.risk !== 'red') return null
-  const alts = findWeatherAlternatives(session, forecast, { limit: 2 })
-  if (alts.length === 0) {
+  const href = `/sessions/${sessionId}/forecast`
+  if (assessment.setting === 'indoor') {
     return (
-      <section className="weather-alts card pad stack">
-        <b>No close indoor alternative right now</b>
-        <p className="tiny">We could not find a matching indoor session at a similar time and price. Try another date in Explore, or use Flex if you are already booked.</p>
-        <ButtonLink to="/explore" size="sm" variant="navy">Browse other dates</ButtonLink>
-      </section>
+      <Link to={href} className={cn('weather-banner', 'risk-green')}>
+        <span className="weather-banner-icon" aria-hidden="true"><Check size={18} /></span>
+        <span className="weather-banner-copy">
+          <b>Indoor session — weather unaffected</b>
+          <small>Outside may change · View forecast details</small>
+        </span>
+        <span className="weather-banner-meta">
+          <span className="weather-chip risk-green">Weather unaffected</span>
+          <span aria-hidden>›</span>
+        </span>
+      </Link>
     )
   }
+
+  if (assessment.risk === 'unknown') {
+    return (
+      <Link to={href} className={cn('weather-banner', 'risk-unknown')}>
+        <span className="weather-banner-icon" aria-hidden="true">☁️</span>
+        <span className="weather-banner-copy">
+          <b>{assessment.badgeLabel}</b>
+          <small>{assessment.message}</small>
+        </span>
+        <span aria-hidden>›</span>
+      </Link>
+    )
+  }
+
+  if (assessment.risk === 'green') {
+    return (
+      <Link to={href} className={cn('weather-banner', 'risk-green')}>
+        <span className="weather-banner-icon" aria-hidden="true">{assessment.badgeIcon}</span>
+        <span className="weather-banner-copy">
+          <b>{assessment.summaryLine ?? `${assessment.temperatureC}°C · Weather suitable`}</b>
+          <small>Conditions look good · View forecast</small>
+        </span>
+        <span className="weather-banner-meta">
+          <span className="weather-chip risk-green">Weather suitable</span>
+          <span aria-hidden>›</span>
+        </span>
+      </Link>
+    )
+  }
+
+  const tone = assessment.risk === 'red' ? 'risk-red' : assessment.risk === 'orange' ? 'risk-orange' : 'risk-yellow'
   return (
-    <section className="weather-alts card pad stack">
-      <div>
-        <div className="kicker">Smart alternative</div>
-        <h2 className="h2" style={{ fontSize: 18 }}>{alternativeHeadline(sportLabel(session.sport))}</h2>
-        <p className="tiny">Same sport, similar time, indoor venue.</p>
-      </div>
-      {alts.map((alt) => (
-        <AlternativeRow key={alt.session.id} alt={alt} />
-      ))}
-    </section>
+    <Link to={href} className={cn('weather-banner', tone)}>
+      <span className="weather-banner-icon" aria-hidden="true">
+        {assessment.risk === 'red' ? <TriangleAlert size={18} /> : <CloudRain size={18} />}
+      </span>
+      <span className="weather-banner-copy">
+        <b>{assessment.summaryLine ?? `${assessment.temperatureC}°C · Rain expected`}</b>
+        <small>
+          {assessment.rainProbability != null ? `${assessment.rainProbability}% chance of rain · ` : ''}
+          View forecast & indoor options
+        </small>
+      </span>
+      <span className="weather-banner-meta">
+        <span className={cn('weather-chip', tone)}>{assessment.title}</span>
+        <span aria-hidden>›</span>
+      </span>
+    </Link>
   )
 }
 
-function AlternativeRow({ alt }: { alt: WeatherAlternative }) {
-  const session = alt.session
+/** Compact card-list weather cue + optional alternative link (Explore) */
+export function ExploreWeatherCue({
+  session,
+  assessment,
+  forecast,
+}: {
+  session: Session
+  assessment: WeatherAssessment
+  forecast: WeatherForecast | null
+}) {
+  const showAlt = needsAlternative(assessment)
+  const alt = showAlt ? findWeatherAlternatives(session, forecast, { limit: 1 })[0] : null
   return (
-    <article className="alt-row">
-      <div className="stack" style={{ gap: 4 }}>
-        <b>{session.name}</b>
-        <p className="tiny">{whenShort(session.startsAt)} · {session.distanceKm} km away · {money(session.price)}</p>
-        <p className="tiny">{alt.reasons.slice(0, 3).join(' · ')}</p>
+    <div className="stack" style={{ gap: 6 }}>
+      <WeatherBadge assessment={assessment} />
+      {showAlt ? (
+        <Link to={`/sessions/${session.id}/alternatives`} className="weather-alt-link">
+          Indoor alternative nearby <ArrowRight size={14} />
+        </Link>
+      ) : null}
+      {!showAlt && alt ? null : null}
+    </div>
+  )
+}
+
+/** Screen 12 — warning block inside My Sessions booking card */
+export function BookingWeatherBlock({
+  sessionId,
+  assessment,
+}: {
+  sessionId: string
+  assessment: WeatherAssessment
+}) {
+  if (assessment.setting === 'indoor') {
+    return (
+      <div className="weather-booking-block risk-green">
+        <div className="between">
+          <div className="cluster">
+            <span className="weather-booking-icon" aria-hidden="true"><Check size={16} /></span>
+            <span className="weather-chip risk-green">Weather unaffected</span>
+          </div>
+        </div>
+        <p className="weather-copy">Indoor session — unaffected by outdoor rain.</p>
+        <div className="weather-booking-actions">
+          <ButtonLink to={`/sessions/${sessionId}/forecast`} size="sm" variant="outline">View Weather Details</ButtonLink>
+        </div>
       </div>
-      <ButtonLink to={`/sessions/${session.id}`} size="sm" variant="lime">View Alternative Session</ButtonLink>
-    </article>
+    )
+  }
+
+  if (assessment.risk === 'green') {
+    return (
+      <div className="weather-booking-block risk-green">
+        <div className="between">
+          <div className="cluster">
+            <span className="weather-booking-icon" aria-hidden="true">{assessment.badgeIcon}</span>
+            <span className="weather-chip risk-green">Weather suitable</span>
+          </div>
+          {assessment.temperatureC != null ? <span className="tiny">{assessment.temperatureC}°C</span> : null}
+        </div>
+        <p className="weather-copy">Looking good! Conditions are suitable for your outdoor session.</p>
+        <div className="weather-booking-actions">
+          <ButtonLink to={`/sessions/${sessionId}/forecast`} size="sm" variant="outline">View Weather Details</ButtonLink>
+        </div>
+      </div>
+    )
+  }
+
+  if (assessment.risk === 'unknown') {
+    return (
+      <div className="weather-booking-block risk-unknown">
+        <div className="cluster">
+          <span className="weather-chip risk-unknown">{assessment.badgeLabel}</span>
+        </div>
+        <p className="weather-copy">{assessment.message}</p>
+        <div className="weather-booking-actions">
+          <ButtonLink to={`/sessions/${sessionId}/forecast`} size="sm" variant="outline">View Weather Details</ButtonLink>
+        </div>
+      </div>
+    )
+  }
+
+  const tone = assessment.risk === 'red' ? 'risk-red' : 'risk-orange'
+  return (
+    <div className={cn('weather-booking-block', tone)}>
+      <div className="between">
+        <div className="cluster">
+          <span className="weather-booking-icon" aria-hidden="true">
+            {assessment.risk === 'red' ? <TriangleAlert size={16} /> : <CloudRain size={16} />}
+          </span>
+          <span className={cn('weather-chip solid', tone)}>{assessment.title}</span>
+        </div>
+        <span className="tiny">
+          {assessment.temperatureC != null ? `${assessment.temperatureC}°C` : ''}
+          {assessment.rainProbability != null ? ` · ${assessment.rainProbability}% rain` : ''}
+        </span>
+      </div>
+      <p className="weather-copy"><b>{assessment.message}</b></p>
+      <div className="weather-booking-actions">
+        <ButtonLink to={`/sessions/${sessionId}/forecast`} size="sm" variant="outline">View Weather Details</ButtonLink>
+        <ButtonLink to={`/sessions/${sessionId}/alternatives`} size="sm" variant="lime">Find an Alternative</ButtonLink>
+      </div>
+    </div>
   )
 }
 
@@ -127,7 +226,7 @@ export function HomeWeatherSection({
   loading: boolean
 }) {
   const assessment = assessSessionWeather({ startsAt, endsAt: startsAt, setting, sport }, forecast, error)
-  const affected = setting !== 'indoor' && (assessment.risk === 'yellow' || assessment.risk === 'orange' || assessment.risk === 'red')
+  const affected = needsAlternative(assessment)
 
   return (
     <section className="weather-home card pad stack">
@@ -147,9 +246,10 @@ export function HomeWeatherSection({
       ) : affected ? (
         <>
           <p className="weather-copy">{assessment.message}</p>
-          <Link to={`/sessions/${sessionId}`} className="btn btn-navy btn-sm" style={{ width: 'fit-content' }}>
-            Explore indoor alternatives
-          </Link>
+          <div className="cluster">
+            <ButtonLink to={`/sessions/${sessionId}/forecast`} size="sm" variant="outline">View Weather Details</ButtonLink>
+            <ButtonLink to={`/sessions/${sessionId}/alternatives`} size="sm" variant="navy">Explore indoor alternatives</ButtonLink>
+          </div>
         </>
       ) : setting === 'indoor' ? (
         <p className="weather-copy">Indoor session — unaffected by outdoor rain.</p>
@@ -162,19 +262,152 @@ export function HomeWeatherSection({
   )
 }
 
-export function BookingWeatherActions({
-  sessionId,
+export function ForecastMetric({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
+  return (
+    <div className="forecast-metric">
+      <span className="forecast-metric-icon" aria-hidden="true">{icon}</span>
+      <b>{value}</b>
+      <span className="tiny">{label}</span>
+    </div>
+  )
+}
+
+export function WhyCautionBox({ assessment }: { assessment: WeatherAssessment }) {
+  if (!assessment.impactReasons?.length) return null
+  const heading =
+    assessment.risk === 'red'
+      ? 'Why this is a severe weather warning'
+      : assessment.risk === 'orange'
+        ? 'Why this session has a weather warning'
+        : 'Why this session has a weather caution'
+  return (
+    <section className={cn('why-caution', assessment.risk === 'red' ? 'risk-red' : 'risk-orange')}>
+      <div className="cluster">
+        <Info size={16} />
+        <b>{heading}</b>
+      </div>
+      <p className="weather-copy">
+        {assessment.risk === 'red'
+          ? 'Severe weather is expected during this outdoor session. Conditions may create a safety concern.'
+          : 'Rain or wind is expected during this outdoor session. Conditions may affect the playing experience.'}
+      </p>
+      <ul className="why-list">
+        {assessment.impactReasons.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+export function IndoorAltPrompt({ session, forecast }: { session: Session; forecast: WeatherForecast | null }) {
+  const alt = findWeatherAlternatives(session, forecast, { limit: 1 })[0]
+  if (!alt) {
+    return (
+      <section className="indoor-alt-prompt">
+        <Home size={18} />
+        <div>
+          <b>Prefer dry conditions?</b>
+          <p className="tiny">No close indoor match right now. Check another date in Explore or Flex.</p>
+        </div>
+      </section>
+    )
+  }
+  return (
+    <section className="indoor-alt-prompt">
+      <Home size={18} />
+      <div>
+        <b>Prefer dry conditions?</b>
+        <p className="tiny">
+          Indoor session — unaffected by outdoor weather. We found an indoor {sportLabel(alt.session.sport).toLowerCase()} match {alt.session.distanceKm} km away
+          {Math.abs(alt.session.price - session.price) < 0.01 ? ' at the same price' : ''}.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+export function AlternativeHeroCard({
+  original,
+  alternative,
+}: {
+  original: Session
+  alternative: Session
+}) {
+  const venue = getVenue(alternative.venueId)
+  return (
+    <article className="alt-hero card">
+      <div className="alt-hero-media">
+        <img src={alternative.image} alt="" />
+        <span className="weather-badge risk-green overlay">✓ Weather unaffected</span>
+        <span className="price-pill alt-price">{money(alternative.price)} total</span>
+        <span className="tag alt-court">Indoor Court</span>
+      </div>
+      <div className="pad stack" style={{ gap: 8 }}>
+        <div className="cluster">
+          <span className="pill">{alternative.levelLabel}</span>
+          <span className="tiny">{alternative.distanceKm} km away</span>
+        </div>
+        <h2 className="h2" style={{ fontSize: 20 }}>{alternative.name}</h2>
+        <p className="tiny">{whenShort(alternative.startsAt)} · {venue.name}</p>
+        <div className="cluster">
+          {alternative.equipmentIncluded ? <span className="tag">Equipment included</span> : null}
+          {Math.abs(alternative.price - original.price) < 0.01 ? <span className="tag">Same {money(original.price)} price</span> : <span className="tag">{money(alternative.price)}</span>}
+        </div>
+      </div>
+    </article>
+  )
+}
+
+/** Kept for Confirmation / legacy embeds */
+export function WeatherDetailsCard({
+  assessment,
+  startsAt,
+}: {
+  assessment: WeatherAssessment
+  startsAt: string
+  showAction?: boolean
+}) {
+  return (
+    <section className={cn('weather-card', `risk-${assessment.risk}`)}>
+      <div className="between">
+        <div className="cluster">
+          <span className="weather-icon" aria-hidden="true">{assessment.badgeIcon}</span>
+          <div>
+            <div className="tiny">{whenShort(startsAt)}</div>
+            <b>{assessment.setting === 'indoor' ? 'Indoor session' : assessment.description ?? assessment.title}</b>
+          </div>
+        </div>
+        <WeatherBadge assessment={assessment} compact />
+      </div>
+      {assessment.forecastAvailable && assessment.setting !== 'indoor' ? (
+        <p className="tiny">
+          {assessment.temperatureC != null ? `${assessment.temperatureC}°C` : '—'}
+          {assessment.rainProbability != null ? ` · ${assessment.rainProbability}% chance of rain` : ''}
+          {assessment.windSpeedKmh != null ? ` · ${assessment.windSpeedKmh} km/h wind` : ''}
+        </p>
+      ) : null}
+      <p className="weather-copy">{assessment.action}</p>
+    </section>
+  )
+}
+
+export function WeatherAlternativeRecommendations({
+  session,
   assessment,
 }: {
-  sessionId: string
+  session: Session
+  forecast?: WeatherForecast | null
   assessment: WeatherAssessment
 }) {
-  if (assessment.setting === 'indoor' && assessment.forecastAvailable) return null
-  const showAlt = assessment.risk === 'orange' || assessment.risk === 'red'
+  if (!needsAlternative(assessment)) return null
   return (
-    <div className="cluster">
-      <ButtonLink to={`/sessions/${sessionId}`} size="sm" variant="outline">View Weather Details</ButtonLink>
-      {showAlt ? <ButtonLink to={`/sessions/${sessionId}`} size="sm" variant="navy">Find an Alternative</ButtonLink> : null}
-    </div>
+    <Link to={`/sessions/${session.id}/alternatives`} className="indoor-alt-prompt" style={{ textDecoration: 'none' }}>
+      <Home size={18} />
+      <div>
+        <b>Prefer dry conditions?</b>
+        <p className="tiny">See indoor alternatives nearby →</p>
+      </div>
+    </Link>
   )
 }
