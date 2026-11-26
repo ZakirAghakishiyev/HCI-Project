@@ -62,7 +62,7 @@ export function SessionDetail() {
           </div>
         </div>
       </div>
-      <div className="stack-lg" style={{ padding: 20 }}>
+      <div className="stack-lg session-detail-body">
         <div className="stack">
           <h1 className="h1" style={{ fontSize: 28 }}>{session.name}</h1>
           <p>{sportLabel(session.sport)} · {venue.name} ({venue.area})</p>

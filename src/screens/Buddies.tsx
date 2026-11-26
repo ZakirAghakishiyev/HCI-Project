@@ -40,7 +40,7 @@ export function Buddies() {
         {menu === 'level' && <div className="cluster">{LEVELS.map((item) => <button key={item.id} className={level === item.id ? 'chip navy' : 'chip'} onClick={() => { setLevel(item.id); setMenu(null) }}>{item.title}</button>)}<button className="chip" onClick={() => { setLevel('all'); setMenu(null) }}>Any</button></div>}
         {menu === 'time' && <div className="cluster">{TIMES.map((item) => <button key={item.id} className={time === item.id ? 'chip navy' : 'chip'} onClick={() => { setTime(item.id); setMenu(null) }}>{item.title}</button>)}<button className="chip" onClick={() => { setTime('all'); setMenu(null) }}>Any</button></div>}
         <p className="tiny">Looking for returning buddies? <b style={{ color: 'var(--ink)' }}>{list.length} {list.length === 1 ? 'match' : 'matches'} near campus</b></p>
-        <div className="stack">
+        <div className="card-grid dense-2">
           {list.map((person, index) => {
             const session = proposedSession(user, person)
             const invite = session ? user.invitations.find((item) => item.buddyId === person.id && item.sessionId === session.id && item.status !== 'declined') : undefined
@@ -71,7 +71,7 @@ export function Buddies() {
               </article>
             )
           })}
-          {list.length === 0 && <div className="empty card pad"><b>No one fits these filters right now.</b><p className="tiny">Widening the day or the level usually helps. People here are also coming back.</p></div>}
+          {list.length === 0 && <div className="empty card pad" style={{ gridColumn: '1 / -1' }}><b>No one fits these filters right now.</b><p className="tiny">Widening the day or the level usually helps. People here are also coming back.</p></div>}
         </div>
       </div>
     </Shell>

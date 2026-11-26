@@ -46,7 +46,7 @@ export function MySessions() {
           <button className={tab === 'upcoming' ? 'on' : ''} onClick={() => setTab('upcoming')}>Upcoming ({upcoming.length})</button>
           <button className={tab === 'completed' ? 'on' : ''} onClick={() => setTab('completed')}>Completed ({completed.length})</button>
         </div>
-        <div className="stack">
+        <div className="card-grid dense-2">
           {list.map((booking) => {
             const invites = user.invitations.filter((invite) => invite.sessionId === booking.sessionId && invite.status !== 'declined')
             const buddy = invites[0] ? getPerson(invites[0].buddyId) : undefined
@@ -89,7 +89,7 @@ export function MySessions() {
             )
           })}
           {list.length === 0 && (
-            <div className="empty card pad">
+            <div className="empty card pad" style={{ gridColumn: '1 / -1' }}>
               <b>{tab === 'upcoming' ? 'Nothing booked yet.' : 'No finished sessions yet.'}</b>
               <p className="tiny">{tab === 'upcoming' ? 'Your next comeback is one easy booking away. Sessions under £5 are marked clearly.' : 'When you play, finished sessions land here. There is no streak to protect at all costs.'}</p>
               <ButtonLink to="/explore">Find a session</ButtonLink>
